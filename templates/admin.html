@@ -1,0 +1,802 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{ active_section.title }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v=style_version) }}" />
+  </head>
+  <body class="app-page admin-page" data-admin-unlocked="{{ '1' if admin_unlocked else '0' }}">
+    <main class="app-shell page-shell">
+      <header class="page-header">
+        <a class="link-btn btn-secondary back-button" href="{{ url_for('home') }}">&larr; Central</a>
+
+        <div class="page-header-main admin-header-main">
+          <div class="page-brand">
+            <img
+              class="brand-logo"
+              src="{{ url_for('static', filename='logo-metalus.png', v=logo_version) }}"
+              alt="Logo Metalus"
+            />
+            <div class="page-brand-copy">
+              <h1 class="page-title">{{ active_section.title }}</h1>
+              <p class="page-subtitle">{{ active_section.headline }}</p>
+              <p class="admin-header-stats">{{ material_count }} materiais &bull; {{ fornecedor_count }} fornecedores</p>
+            </div>
+          </div>
+
+          {% if active_section.key == 'configuracoes' and admin_unlocked %}
+          <div class="admin-header-actions">
+            <button id="logout_btn" type="button" class="ghost btn-secondary">Sair da administra&ccedil;&atilde;o</button>
+          </div>
+          {% endif %}
+        </div>
+      </header>
+
+      <section class="admin-page-section">
+        {% if active_section.key == 'configuracoes' %}
+          {% if not admin_unlocked %}
+          <div id="admin_lock" class="card admin-login-card">
+            <div class="section-head compact-section-head centered-section-head">
+              <div>
+                <h2>Liberar acesso</h2>
+                <p>Informe a senha para acessar backup, restaura&ccedil;&atilde;o e controles do sistema.</p>
+              </div>
+            </div>
+
+            <form id="unlock_form" class="admin-login-form">
+              <label>
+                <span>Senha</span>
+                <input type="password" id="admin_password" placeholder="Digite a senha de acesso" required />
+              </label>
+              <button class="btn-primary admin-submit-btn" type="submit">Entrar</button>
+            </form>
+            <small id="unlock_msg" class="status"></small>
+          </div>
+          {% else %}
+          <section class="card backup-card" id="backup-tools">
+            <div class="section-head compact-section-head admin-section-head">
+              <div>
+                <h2>Backup e Restaura&ccedil;&atilde;o</h2>
+                <p>Backup geral do sistema, incluindo banco de dados, configura&ccedil;&otilde;es e PDFs gerados.</p>
+              </div>
+            </div>
+
+            <div class="backup-toolbar">
+              <button id="backup_create_btn" class="btn-primary" type="button">Gerar backup geral</button>
+              <small id="backup_msg" class="status"></small>
+            </div>
+
+            <div class="backup-restore-grid">
+              <article class="backup-list-card">
+                <div class="backup-list-head">
+                  <h3>Restaurar backup geral</h3>
+                </div>
+
+                <form id="backup_restore_form" class="backup-restore-form">
+                  <label>
+                    <span>Arquivo .zip</span>
+                    <input id="backup_file_input" type="file" name="backup_file" accept=".zip,application/zip" required />
+                  </label>
+                  <button id="backup_restore_submit" class="btn-primary" type="submit">Restaurar backup geral</button>
+                </form>
+
+                <p class="backup-note">Antes de restaurar, o sistema cria um backup autom&aacute;tico do estado atual.</p>
+              </article>
+
+              <article class="backup-list-card backup-help-card">
+                <div class="backup-list-head">
+                  <h3>Restaurar em um PC novo</h3>
+                </div>
+                <p>
+                  Instale a Central de Etiquetas no novo computador, abra o sistema, acesse Configura&ccedil;&otilde;es e
+                  restaure aqui o arquivo .zip do backup geral. Ap&oacute;s a restaura&ccedil;&atilde;o, reinicie o sistema.
+                </p>
+              </article>
+            </div>
+
+            <div class="backup-list-card">
+              <div class="backup-list-head">
+                <h3>Backups gerais dispon&iacute;veis</h3>
+              </div>
+
+              {% if backup_files %}
+              <div class="backup-table-wrap">
+                <table class="backup-table">
+                  <thead>
+                    <tr>
+                      <th>Arquivo</th>
+                      <th>Data</th>
+                      <th>Tamanho</th>
+                      <th>A&ccedil;&otilde;es</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for backup in backup_files %}
+                    <tr>
+                      <td>{{ backup.name }}</td>
+                      <td>{{ backup.modified_at }}</td>
+                      <td>{{ backup.size_kb }} KB</td>
+                      <td>
+                        <div class="backup-row-actions">
+                          <a class="link-btn btn-secondary" href="{{ url_for('admin_backup_download', filename=backup.name) }}">Baixar</a>
+                          <button
+                            class="ghost btn-secondary backup-restore-btn"
+                            type="button"
+                            data-filename="{{ backup.name }}"
+                          >
+                            Restaurar
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+              {% else %}
+              <p class="backup-empty">Nenhum backup dispon&iacute;vel no momento.</p>
+              {% endif %}
+            </div>
+          </section>
+          {% endif %}
+        {% elif active_section.key == 'cadastros' %}
+        <div class="admin-wrap admin-dashboard">
+          <div class="section-head compact-section-head admin-section-head">
+            <div>
+              <h2>Cadastros</h2>
+              <p>Materiais, produtos e fornecedores usados no preenchimento autom&aacute;tico.</p>
+            </div>
+          </div>
+
+          <div class="admin-subtabs" aria-label="Tipos de cadastro">
+            <button class="admin-subtab is-active" type="button" data-cadastro-tab-trigger="materiais">Materiais / Produtos</button>
+            <button class="admin-subtab" type="button" data-cadastro-tab-trigger="fornecedores">Fornecedores</button>
+          </div>
+
+          <section class="admin-subpanel is-active" data-cadastro-panel="materiais" id="cadastros-materiais">
+            <div class="admin-cadastro-grid">
+              <form id="material_form" class="card form-card">
+                <h3>Material / Produto</h3>
+                <label>
+                  <span>C&oacute;digo</span>
+                  <input type="text" id="material_code_input" name="code" required />
+                </label>
+                <label>
+                  <span>Descri&ccedil;&atilde;o</span>
+                  <input type="text" id="material_description_input" name="description" required />
+                </label>
+                <button class="btn-primary" type="submit">Salvar Material / Produto</button>
+                <small id="material_save_msg" class="status"></small>
+              </form>
+
+              <article class="card form-card import-card">
+                <h3>Importar materiais / produtos</h3>
+                <p class="admin-card-text">CSV com cabe&ccedil;alho `codigo,descricao`.</p>
+
+                <form id="material_import_form" class="import-form">
+                  <label>
+                    <span>Arquivo CSV</span>
+                    <input type="file" id="material_csv_input" name="arquivo_csv" accept=".csv,text/csv" required />
+                  </label>
+                  <div class="import-actions">
+                    <button class="btn-primary" type="submit">Importar materiais / produtos</button>
+                    <a class="link-btn btn-secondary" href="{{ url_for('admin_modelo_materiais') }}">Baixar modelo CSV</a>
+                  </div>
+                </form>
+                <small id="material_import_msg" class="status"></small>
+              </article>
+            </div>
+
+            <section class="card table-card cadastro-table-card">
+              <div class="cadastro-table-head">
+                <div>
+                  <h3>Materiais / Produtos cadastrados</h3>
+                  <p>Total: <strong id="materials_total">0</strong></p>
+                </div>
+
+                <form id="materials_search_form" class="search-inline-form">
+                  <input
+                    type="search"
+                    id="materials_search_input"
+                    placeholder="Buscar por c&oacute;digo ou descri&ccedil;&atilde;o"
+                  />
+                  <button class="btn-secondary" type="submit">Buscar</button>
+                </form>
+              </div>
+
+              <div class="admin-table-wrap">
+                <table class="admin-data-table">
+                  <thead>
+                    <tr>
+                      <th>C&oacute;digo</th>
+                      <th>Descri&ccedil;&atilde;o</th>
+                      <th>A&ccedil;&otilde;es</th>
+                    </tr>
+                  </thead>
+                  <tbody id="materials_table_body">
+                    <tr>
+                      <td colspan="3" class="table-empty">Carregando registros...</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="pagination-bar">
+                <button id="materials_prev_btn" class="btn-secondary" type="button">Anterior</button>
+                <span id="materials_page_info" class="pagination-info">P&aacute;gina 1</span>
+                <button id="materials_next_btn" class="btn-secondary" type="button">Pr&oacute;xima</button>
+              </div>
+            </section>
+          </section>
+
+          <section class="admin-subpanel" data-cadastro-panel="fornecedores" id="cadastros-fornecedores">
+            <div class="admin-cadastro-grid">
+              <form id="fornecedor_form" class="card form-card">
+                <h3>Fornecedor</h3>
+                <label>
+                  <span>C&oacute;digo</span>
+                  <input type="text" id="fornecedor_code_input" name="code" required />
+                </label>
+                <label>
+                  <span>Nome</span>
+                  <input type="text" id="fornecedor_name_input" name="name" required />
+                </label>
+                <button class="btn-primary" type="submit">Salvar Fornecedor</button>
+                <small id="fornecedor_save_msg" class="status"></small>
+              </form>
+
+              <article class="card form-card import-card">
+                <h3>Importar fornecedores</h3>
+                <p class="admin-card-text">CSV com cabe&ccedil;alho `codigo,nome`.</p>
+
+                <form id="fornecedor_import_form" class="import-form">
+                  <label>
+                    <span>Arquivo CSV</span>
+                    <input type="file" id="fornecedor_csv_input" name="arquivo_csv" accept=".csv,text/csv" required />
+                  </label>
+                  <div class="import-actions">
+                    <button class="btn-primary" type="submit">Importar fornecedores</button>
+                    <a class="link-btn btn-secondary" href="{{ url_for('admin_modelo_fornecedores') }}">Baixar modelo CSV</a>
+                  </div>
+                </form>
+                <small id="fornecedor_import_msg" class="status"></small>
+              </article>
+            </div>
+
+            <section class="card table-card cadastro-table-card">
+              <div class="cadastro-table-head">
+                <div>
+                  <h3>Fornecedores cadastrados</h3>
+                  <p>Total: <strong id="suppliers_total">0</strong></p>
+                </div>
+
+                <form id="suppliers_search_form" class="search-inline-form">
+                  <input
+                    type="search"
+                    id="suppliers_search_input"
+                    placeholder="Buscar por c&oacute;digo ou nome"
+                  />
+                  <button class="btn-secondary" type="submit">Buscar</button>
+                </form>
+              </div>
+
+              <div class="admin-table-wrap">
+                <table class="admin-data-table">
+                  <thead>
+                    <tr>
+                      <th>C&oacute;digo</th>
+                      <th>Nome</th>
+                      <th>A&ccedil;&otilde;es</th>
+                    </tr>
+                  </thead>
+                  <tbody id="suppliers_table_body">
+                    <tr>
+                      <td colspan="3" class="table-empty">Carregando registros...</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="pagination-bar">
+                <button id="suppliers_prev_btn" class="btn-secondary" type="button">Anterior</button>
+                <span id="suppliers_page_info" class="pagination-info">P&aacute;gina 1</span>
+                <button id="suppliers_next_btn" class="btn-secondary" type="button">Pr&oacute;xima</button>
+              </div>
+            </section>
+          </section>
+        </div>
+        {% else %}
+        <div class="admin-wrap admin-dashboard">
+          <div class="section-head compact-section-head admin-section-head">
+            <div>
+              <h2>{{ active_section.section_title }}</h2>
+              <p>{{ active_section.section_description }}</p>
+            </div>
+          </div>
+
+          <div class="admin-future-grid admin-future-grid-compact">
+            <article class="card future-card">
+              <span class="module-badge">Preparado</span>
+              <h3>Etiqueta de Identifica&ccedil;&atilde;o</h3>
+              <p>Estrutura reservada para regras e cadastros auxiliares.</p>
+              <a class="link-btn btn-secondary" href="{{ url_for('identificacao') }}">Abrir m&oacute;dulo</a>
+            </article>
+
+            <article class="card future-card">
+              <span class="module-badge">Planejamento</span>
+              <h3>Pr&oacute;ximas Etiquetas</h3>
+              <p>Base administrativa pronta para novos modelos de etiqueta.</p>
+              <a class="link-btn btn-secondary" href="{{ url_for('admin_section', section='proximas-etiquetas') }}">Abrir &aacute;rea</a>
+            </article>
+          </div>
+        </div>
+        {% endif %}
+      </section>
+    </main>
+
+    <script>
+      const unlockForm = document.getElementById('unlock_form');
+      const unlockMsg = document.getElementById('unlock_msg');
+      const logoutBtn = document.getElementById('logout_btn');
+      const backupCreateBtn = document.getElementById('backup_create_btn');
+      const backupMsg = document.getElementById('backup_msg');
+      const backupRestoreButtons = document.querySelectorAll('.backup-restore-btn');
+      const backupRestoreForm = document.getElementById('backup_restore_form');
+      const backupRestoreSubmit = document.getElementById('backup_restore_submit');
+      const backupFileInput = document.getElementById('backup_file_input');
+      const cadastroTabTriggers = document.querySelectorAll('[data-cadastro-tab-trigger]');
+      const cadastroPanels = document.querySelectorAll('[data-cadastro-panel]');
+      const materialForm = document.getElementById('material_form');
+      const fornecedorForm = document.getElementById('fornecedor_form');
+      const materialImportForm = document.getElementById('material_import_form');
+      const fornecedorImportForm = document.getElementById('fornecedor_import_form');
+      const materialCodeInput = document.getElementById('material_code_input');
+      const materialDescriptionInput = document.getElementById('material_description_input');
+      const fornecedorCodeInput = document.getElementById('fornecedor_code_input');
+      const fornecedorNameInput = document.getElementById('fornecedor_name_input');
+      const materialsSearchForm = document.getElementById('materials_search_form');
+      const materialsSearchInput = document.getElementById('materials_search_input');
+      const suppliersSearchForm = document.getElementById('suppliers_search_form');
+      const suppliersSearchInput = document.getElementById('suppliers_search_input');
+      const materialsTableBody = document.getElementById('materials_table_body');
+      const suppliersTableBody = document.getElementById('suppliers_table_body');
+      const materialsTotal = document.getElementById('materials_total');
+      const suppliersTotal = document.getElementById('suppliers_total');
+      const materialsPageInfo = document.getElementById('materials_page_info');
+      const suppliersPageInfo = document.getElementById('suppliers_page_info');
+      const materialsPrevBtn = document.getElementById('materials_prev_btn');
+      const materialsNextBtn = document.getElementById('materials_next_btn');
+      const suppliersPrevBtn = document.getElementById('suppliers_prev_btn');
+      const suppliersNextBtn = document.getElementById('suppliers_next_btn');
+
+      const materialsState = { page: 1, search: '', pages: 1 };
+      const suppliersState = { page: 1, search: '', pages: 1 };
+
+      function setCadastroTab(tabName) {
+        cadastroTabTriggers.forEach((button) => {
+          const isActive = button.dataset.cadastroTabTrigger === tabName;
+          button.classList.toggle('is-active', isActive);
+          button.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        });
+
+        cadastroPanels.forEach((panel) => {
+          panel.classList.toggle('is-active', panel.dataset.cadastroPanel === tabName);
+        });
+      }
+
+      function getCadastroHash(tabName) {
+        return tabName === 'fornecedores' ? '#cadastros-fornecedores' : '#cadastros-materiais';
+      }
+
+      function escapeHtml(value) {
+        return String(value || '')
+          .replaceAll('&', '&amp;')
+          .replaceAll('<', '&lt;')
+          .replaceAll('>', '&gt;')
+          .replaceAll('"', '&quot;')
+          .replaceAll("'", '&#39;');
+      }
+
+      unlockForm?.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const password = document.getElementById('admin_password')?.value || '';
+
+        const resp = await fetch('/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password }),
+        });
+
+        const data = await resp.json();
+        unlockMsg.textContent = data.message || '';
+        unlockMsg.classList.toggle('ok', Boolean(data.ok));
+
+        if (data.ok) {
+          window.location.reload();
+        }
+      });
+
+      logoutBtn?.addEventListener('click', async () => {
+        await fetch('/admin/logout', { method: 'POST' });
+        window.location.reload();
+      });
+
+      cadastroTabTriggers.forEach((button) => {
+        button.addEventListener('click', () => {
+          const nextTab = button.dataset.cadastroTabTrigger || 'materiais';
+          setCadastroTab(nextTab);
+          window.location.hash = getCadastroHash(nextTab);
+        });
+      });
+
+      if (cadastroTabTriggers.length) {
+        const defaultCadastroTab = window.location.hash === '#cadastros-fornecedores' ? 'fornecedores' : 'materiais';
+        setCadastroTab(defaultCadastroTab);
+      }
+
+      function renderTableRows(tableBody, items, type) {
+        if (!tableBody) return;
+
+        if (!items.length) {
+          const label = type === 'materials' ? 'Nenhum material encontrado.' : 'Nenhum fornecedor encontrado.';
+          tableBody.innerHTML = `<tr><td colspan="3" class="table-empty">${label}</td></tr>`;
+          return;
+        }
+
+        tableBody.innerHTML = items
+          .map((item) => {
+            const safeCode = escapeHtml(item.code || '');
+            const safeLabel = escapeHtml(item.label || '');
+            const actionType = type === 'materials' ? 'material' : 'supplier';
+
+            return `
+              <tr>
+                <td>${safeCode}</td>
+                <td>${safeLabel}</td>
+                <td>
+                  <button
+                    class="ghost btn-secondary table-edit-btn"
+                    type="button"
+                    data-edit-type="${actionType}"
+                    data-code="${safeCode}"
+                    data-label="${safeLabel}"
+                  >
+                    Editar
+                  </button>
+                </td>
+              </tr>
+            `;
+          })
+          .join('');
+      }
+
+      async function loadMaterials() {
+        if (!materialsTableBody) return;
+        materialsTableBody.innerHTML = '<tr><td colspan="3" class="table-empty">Carregando registros...</td></tr>';
+
+        const params = new URLSearchParams({
+          q: materialsState.search,
+          page: String(materialsState.page),
+          per_page: '25',
+        });
+
+        const response = await fetch(`/admin/api/materiais?${params.toString()}`);
+        const data = await response.json();
+        if (!response.ok || !data.ok) {
+          materialsTableBody.innerHTML = '<tr><td colspan="3" class="table-empty">N\u00e3o foi poss\u00edvel carregar os materiais.</td></tr>';
+          return;
+        }
+
+        materialsState.pages = data.pages || 1;
+        if (materialsTotal) materialsTotal.textContent = String(data.total || 0);
+        if (materialsPageInfo) materialsPageInfo.textContent = `P\u00e1gina ${data.page} de ${data.pages}`;
+        if (materialsPrevBtn) materialsPrevBtn.disabled = !data.has_prev;
+        if (materialsNextBtn) materialsNextBtn.disabled = !data.has_next;
+        renderTableRows(materialsTableBody, data.items || [], 'materials');
+      }
+
+      async function loadSuppliers() {
+        if (!suppliersTableBody) return;
+        suppliersTableBody.innerHTML = '<tr><td colspan="3" class="table-empty">Carregando registros...</td></tr>';
+
+        const params = new URLSearchParams({
+          q: suppliersState.search,
+          page: String(suppliersState.page),
+          per_page: '25',
+        });
+
+        const response = await fetch(`/admin/api/fornecedores?${params.toString()}`);
+        const data = await response.json();
+        if (!response.ok || !data.ok) {
+          suppliersTableBody.innerHTML = '<tr><td colspan="3" class="table-empty">N\u00e3o foi poss\u00edvel carregar os fornecedores.</td></tr>';
+          return;
+        }
+
+        suppliersState.pages = data.pages || 1;
+        if (suppliersTotal) suppliersTotal.textContent = String(data.total || 0);
+        if (suppliersPageInfo) suppliersPageInfo.textContent = `P\u00e1gina ${data.page} de ${data.pages}`;
+        if (suppliersPrevBtn) suppliersPrevBtn.disabled = !data.has_prev;
+        if (suppliersNextBtn) suppliersNextBtn.disabled = !data.has_next;
+        renderTableRows(suppliersTableBody, data.items || [], 'suppliers');
+      }
+
+      async function submitImportForm(formEl, endpoint, msgElId, onSuccess) {
+        const msgEl = document.getElementById(msgElId);
+        const formData = new FormData(formEl);
+
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          body: formData,
+        });
+
+        const data = await response.json();
+        if (msgEl) {
+          msgEl.textContent = data.message || '';
+          msgEl.classList.toggle('ok', Boolean(data.ok));
+        }
+
+        if (data.ok) {
+          formEl.reset();
+          await onSuccess();
+        }
+      }
+
+      backupCreateBtn?.addEventListener('click', async () => {
+        backupCreateBtn.disabled = true;
+        if (backupMsg) {
+          backupMsg.textContent = 'Gerando backup geral...';
+          backupMsg.classList.remove('ok');
+        }
+
+        try {
+          const response = await fetch('/admin/backup/create', { method: 'POST' });
+          const data = await response.json();
+
+          if (!response.ok || !data.ok) {
+            throw new Error(data.message || 'Falha ao gerar backup.');
+          }
+
+          if (backupMsg) {
+            backupMsg.textContent = data.message || 'Backup geral criado com sucesso.';
+            backupMsg.classList.add('ok');
+          }
+
+          window.setTimeout(() => window.location.reload(), 700);
+        } catch (error) {
+          if (backupMsg) {
+            backupMsg.textContent = error.message || 'Erro ao gerar backup.';
+            backupMsg.classList.remove('ok');
+          }
+        } finally {
+          backupCreateBtn.disabled = false;
+        }
+      });
+
+      backupRestoreButtons.forEach((button) => {
+        button.addEventListener('click', async () => {
+          const filename = button.dataset.filename || '';
+          if (!filename) return;
+
+          const confirmed = window.confirm(
+            'Esta a\u00e7\u00e3o ir\u00e1 substituir os dados atuais pelo conte\u00fado do backup selecionado. Um backup autom\u00e1tico do estado atual ser\u00e1 criado antes da restaura\u00e7\u00e3o.'
+          );
+          if (!confirmed) return;
+
+          button.disabled = true;
+          if (backupMsg) {
+            backupMsg.textContent = 'Restaurando backup geral...';
+            backupMsg.classList.remove('ok');
+          }
+
+          try {
+            const response = await fetch('/admin/backup/restore', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ filename }),
+            });
+            const data = await response.json();
+
+            if (!response.ok || !data.ok) {
+              throw new Error(data.message || 'Falha ao restaurar backup geral.');
+            }
+
+            if (backupMsg) {
+              backupMsg.textContent = data.message || 'Backup restaurado com sucesso.';
+              backupMsg.classList.add('ok');
+            }
+
+            window.setTimeout(() => window.location.reload(), 900);
+          } catch (error) {
+            if (backupMsg) {
+              backupMsg.textContent = error.message || 'Erro ao restaurar backup geral.';
+              backupMsg.classList.remove('ok');
+            }
+          } finally {
+            button.disabled = false;
+          }
+        });
+      });
+
+      backupRestoreForm?.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const file = backupFileInput?.files?.[0];
+        if (!file) {
+          if (backupMsg) {
+            backupMsg.textContent = 'Selecione um arquivo .zip para restaura\u00e7\u00e3o.';
+            backupMsg.classList.remove('ok');
+          }
+          return;
+        }
+
+        const confirmed = window.confirm(
+          'Esta a\u00e7\u00e3o ir\u00e1 substituir os dados atuais pelo conte\u00fado do backup selecionado. Um backup autom\u00e1tico do estado atual ser\u00e1 criado antes da restaura\u00e7\u00e3o.'
+        );
+        if (!confirmed) return;
+
+        const formData = new FormData();
+        formData.append('backup_file', file);
+
+        backupRestoreSubmit.disabled = true;
+        if (backupMsg) {
+          backupMsg.textContent = 'Restaurando backup geral...';
+          backupMsg.classList.remove('ok');
+        }
+
+        try {
+          const response = await fetch('/admin/backup/restore', {
+            method: 'POST',
+            body: formData,
+          });
+          const data = await response.json();
+
+          if (!response.ok || !data.ok) {
+            throw new Error(data.message || 'Falha ao restaurar backup geral.');
+          }
+
+          if (backupMsg) {
+            backupMsg.textContent = data.message || 'Backup restaurado com sucesso.';
+            backupMsg.classList.add('ok');
+          }
+
+          window.setTimeout(() => window.location.reload(), 900);
+        } catch (error) {
+          if (backupMsg) {
+            backupMsg.textContent = error.message || 'Erro ao restaurar backup geral.';
+            backupMsg.classList.remove('ok');
+          }
+        } finally {
+          backupRestoreSubmit.disabled = false;
+        }
+      });
+
+      async function submitAdminForm(formEl, endpoint, msgElId) {
+        const msgEl = document.getElementById(msgElId);
+        const payload = Object.fromEntries(new FormData(formEl).entries());
+
+        const resp = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await resp.json();
+        if (msgEl) {
+          msgEl.textContent = data.message || '';
+          msgEl.classList.toggle('ok', Boolean(data.ok));
+        }
+
+        if (data.ok) {
+          formEl.reset();
+        }
+
+        return data;
+      }
+
+      materialForm?.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const data = await submitAdminForm(materialForm, '/admin/material', 'material_save_msg');
+        if (data.ok) {
+          materialsState.page = 1;
+          materialsState.search = '';
+          if (materialsSearchInput) materialsSearchInput.value = '';
+          await loadMaterials();
+        }
+      });
+
+      fornecedorForm?.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const data = await submitAdminForm(fornecedorForm, '/admin/fornecedor', 'fornecedor_save_msg');
+        if (data.ok) {
+          suppliersState.page = 1;
+          suppliersState.search = '';
+          if (suppliersSearchInput) suppliersSearchInput.value = '';
+          await loadSuppliers();
+        }
+      });
+
+      materialImportForm?.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        await submitImportForm(
+          materialImportForm,
+          '/admin/cadastros/materiais/importar',
+          'material_import_msg',
+          loadMaterials
+        );
+      });
+
+      fornecedorImportForm?.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        await submitImportForm(
+          fornecedorImportForm,
+          '/admin/cadastros/fornecedores/importar',
+          'fornecedor_import_msg',
+          loadSuppliers
+        );
+      });
+
+      materialsSearchForm?.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        materialsState.page = 1;
+        materialsState.search = materialsSearchInput?.value?.trim() || '';
+        await loadMaterials();
+      });
+
+      suppliersSearchForm?.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        suppliersState.page = 1;
+        suppliersState.search = suppliersSearchInput?.value?.trim() || '';
+        await loadSuppliers();
+      });
+
+      materialsPrevBtn?.addEventListener('click', async () => {
+        if (materialsState.page <= 1) return;
+        materialsState.page -= 1;
+        await loadMaterials();
+      });
+
+      materialsNextBtn?.addEventListener('click', async () => {
+        if (materialsState.page >= materialsState.pages) return;
+        materialsState.page += 1;
+        await loadMaterials();
+      });
+
+      suppliersPrevBtn?.addEventListener('click', async () => {
+        if (suppliersState.page <= 1) return;
+        suppliersState.page -= 1;
+        await loadSuppliers();
+      });
+
+      suppliersNextBtn?.addEventListener('click', async () => {
+        if (suppliersState.page >= suppliersState.pages) return;
+        suppliersState.page += 1;
+        await loadSuppliers();
+      });
+
+      materialsTableBody?.addEventListener('click', (event) => {
+        const button = event.target.closest('[data-edit-type="material"]');
+        if (!button) return;
+
+        setCadastroTab('materiais');
+        if (materialCodeInput) materialCodeInput.value = button.dataset.code || '';
+        if (materialDescriptionInput) materialDescriptionInput.value = button.dataset.label || '';
+        materialCodeInput?.focus();
+      });
+
+      suppliersTableBody?.addEventListener('click', (event) => {
+        const button = event.target.closest('[data-edit-type="supplier"]');
+        if (!button) return;
+
+        setCadastroTab('fornecedores');
+        if (fornecedorCodeInput) fornecedorCodeInput.value = button.dataset.code || '';
+        if (fornecedorNameInput) fornecedorNameInput.value = button.dataset.label || '';
+        fornecedorCodeInput?.focus();
+      });
+
+      if (materialsTableBody || suppliersTableBody) {
+        loadMaterials();
+        loadSuppliers();
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,26 @@
+# Python environments and caches
+.venv/
+.build-windows/
+.build-linux/
+__pycache__/
+*.py[cod]
+
+# PyInstaller and package build output
+build/
+dist/
+
+# Local databases, backups, and generated documents
+data/*.db*
+backups/
+output/
+ALMOXARIFADO_OFFLINE/data/*.db*
+ALMOXARIFADO_OFFLINE/backups/
+ALMOXARIFADO_OFFLINE/output/
+ALMOXARIFADO_OFFLINE/dist/
+ALMOXARIFADO_OFFLINE/build/
+ALMOXARIFADO_OFFLINE/*.zip
+
+# Temporary extraction and test artifacts
+ods_unzipped/
+test_artifacts/
+.test_artifacts/

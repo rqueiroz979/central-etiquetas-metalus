@@ -1,0 +1,7 @@
+{
+  "template_path": "Etiquetas Identificação de Matéria Prima.ods",
+  "output_dir": "output",
+  "db_path": "data/etiquetas.db",
+  "admin_password": "Metalus@admin",
+  "flask_secret_key": "troque-esta-chave"
+}

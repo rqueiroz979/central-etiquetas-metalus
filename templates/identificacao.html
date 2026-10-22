@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Etiqueta de Identifica&ccedil;&atilde;o</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v=style_version) }}" />
+  </head>
+  <body class="app-page">
+    <main class="app-shell page-shell">
+      <header class="page-header">
+        <a class="link-btn btn-secondary back-button" href="{{ url_for('home') }}">&larr; Central</a>
+
+        <div class="page-header-main">
+          <div class="page-brand">
+            <img
+              class="brand-logo"
+              src="{{ url_for('static', filename='logo-metalus.png', v=logo_version) }}"
+              alt="Logo Metalus"
+            />
+            <div class="page-brand-copy">
+              <h1 class="page-title">Etiqueta de Identifica&ccedil;&atilde;o</h1>
+              <p class="page-subtitle">Importe a planilha ODS ou Excel. No lote, o sistema distribui 6 etiquetas por folha A4.</p>
+              <div class="page-meta">
+                <span class="meta-pill">Importa ODS e Excel</span>
+                <span class="meta-pill">A4 - 6 por folha</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <section class="module-placeholder ident-module">
+        <div class="section-head compact-section-head">
+          <div>
+            <h2>Importar planilha</h2>
+            <p>Extrai OS, c&oacute;digo do item e quantidade do lote de arquivos ODS e Excel.</p>
+          </div>
+        </div>
+
+        <form id="ident_import_form" class="import-form">
+          <input type="file" id="arquivo_planilha" name="arquivo_planilha" accept=".ods,.xlsx,.xlsm" required />
+          <button class="btn-primary" type="submit">Importar planilha</button>
+          <small id="import_msg" class="status"></small>
+        </form>
+
+        <div id="import_results" class="import-results hidden">
+          <div class="import-results-head">
+            <div>
+              <h3>Registros encontrados</h3>
+              <small>Use um registro individualmente ou gere em lote com 6 por folha A4.</small>
+            </div>
+            <div class="import-batch-actions">
+              <label class="import-check-all">
+                <input type="checkbox" id="import_check_all" />
+                <span>Marcar todos</span>
+              </label>
+              <button class="ghost btn-secondary" type="button" id="ident_batch_btn">Gerar em lote</button>
+            </div>
+          </div>
+          <div class="import-table-wrap">
+            <table class="import-table">
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>OS</th>
+                  <th>C&oacute;digo item</th>
+                  <th>Quantidade lote</th>
+                  <th>A&ccedil;&atilde;o</th>
+                </tr>
+              </thead>
+              <tbody id="import_rows"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <form id="ident_form" class="ident-fields">
+          <div class="section-head compact-section-head">
+            <div>
+              <h2>Dados da Etiqueta</h2>
+              <p>Este modelo gera sempre em A4. No individual sai 1 etiqueta; no lote importado, o sistema distribui 6 por folha.</p>
+            </div>
+          </div>
+
+          <div class="form-grid ident-form-grid">
+            <label>
+              <span>O.S.</span>
+              <input id="ident_os" type="text" name="os" />
+            </label>
+            <label>
+              <span>Data</span>
+              <input id="ident_data" type="text" name="data" value="{{ default_data }}" />
+            </label>
+            <label>
+              <span>C&oacute;digo item</span>
+              <input id="ident_codigo_item" type="text" name="codigo_item" />
+            </label>
+            <label>
+              <span>Quantidade lote</span>
+              <input id="ident_quantidade_lote" type="text" name="quantidade_lote" />
+            </label>
+            <label>
+              <span>Quantidade NC</span>
+              <input id="ident_quantidade_nc" type="text" name="quantidade_nc" />
+            </label>
+            <label>
+              <span>Inspetor</span>
+              <input id="ident_inspetor" type="text" name="inspetor" />
+            </label>
+            <label class="ident-form-wide">
+              <span>N&atilde;o conformidade</span>
+              <input id="ident_nao_conformidade" type="text" name="nao_conformidade" />
+            </label>
+          </div>
+          <div class="actions">
+            <button id="ident_generate_btn" class="btn-primary" type="submit">Gerar Etiqueta</button>
+            <small id="ident_generate_msg" class="status"></small>
+          </div>
+        </form>
+
+        <section id="ident_preview_panel" class="preview-panel hidden">
+          <div class="preview-head">
+            <h3>Preview do PDF</h3>
+            <div class="preview-actions">
+              <a id="ident_download_btn" class="link-btn btn-secondary" href="#">Baixar PDF</a>
+              <button id="ident_print_btn" class="ghost btn-secondary" type="button">Imprimir</button>
+            </div>
+          </div>
+          <iframe id="ident_preview_iframe" title="Preview da Etiqueta de Identifica&ccedil;&atilde;o"></iframe>
+        </section>
+      </section>
+    </main>
+
+    <script>
+      const importForm = document.getElementById('ident_import_form');
+      const importMsg = document.getElementById('import_msg');
+      const importResults = document.getElementById('import_results');
+      const importRows = document.getElementById('import_rows');
+      const identForm = document.getElementById('ident_form');
+      const identGenerateBtn = document.getElementById('ident_generate_btn');
+      const identGenerateMsg = document.getElementById('ident_generate_msg');
+      const identPreviewPanel = document.getElementById('ident_preview_panel');
+      const identPreviewIframe = document.getElementById('ident_preview_iframe');
+      const identDownloadBtn = document.getElementById('ident_download_btn');
+      const identPrintBtn = document.getElementById('ident_print_btn');
+      const identBatchBtn = document.getElementById('ident_batch_btn');
+      const importCheckAll = document.getElementById('import_check_all');
+
+      const fieldOs = document.getElementById('ident_os');
+      const fieldData = document.getElementById('ident_data');
+      const fieldCodigoItem = document.getElementById('ident_codigo_item');
+      const fieldQuantidadeLote = document.getElementById('ident_quantidade_lote');
+      let importedRowsData = [];
+
+      function fillIdentFields(row) {
+        if (fieldOs) fieldOs.value = row.os || '';
+        if (fieldCodigoItem) fieldCodigoItem.value = row.codigo_item || '';
+        if (fieldQuantidadeLote) fieldQuantidadeLote.value = row.quantidade_lote || '';
+        if (fieldData && !fieldData.value.trim()) {
+          fieldData.value = '{{ default_data }}';
+        }
+      }
+
+      function renderImportRows(rows) {
+        if (!importRows) return;
+        importedRowsData = Array.isArray(rows) ? rows : [];
+        importRows.innerHTML = rows
+          .map((row, index) => `
+            <tr>
+              <td><input type="checkbox" class="import-row-check" data-index="${index}" /></td>
+              <td>${row.os || ''}</td>
+              <td>${row.codigo_item || ''}</td>
+              <td>${row.quantidade_lote || ''}</td>
+              <td><button type="button" class="ghost btn-secondary import-use-btn" data-index="${index}">Usar</button></td>
+            </tr>
+          `)
+          .join('');
+
+        importRows.querySelectorAll('.import-use-btn').forEach((button) => {
+          button.addEventListener('click', () => {
+            const row = rows[Number(button.dataset.index)];
+            if (!row) return;
+            fillIdentFields(row);
+          });
+        });
+
+        importRows.querySelectorAll('.import-row-check').forEach((checkbox) => {
+          checkbox.addEventListener('change', () => {
+            const allChecks = Array.from(importRows.querySelectorAll('.import-row-check'));
+            if (importCheckAll) {
+              importCheckAll.checked = allChecks.length > 0 && allChecks.every((item) => item.checked);
+            }
+          });
+        });
+      }
+
+      importForm?.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const formData = new FormData(importForm);
+        importMsg.textContent = 'Lendo arquivo...';
+        importMsg.classList.remove('ok');
+
+        try {
+          const response = await fetch('/identificacao/importar_planilha', {
+            method: 'POST',
+            body: formData,
+          });
+          const data = await response.json();
+
+          if (!response.ok || !data.ok) {
+            throw new Error(data.message || 'Falha ao ler o arquivo.');
+          }
+
+          renderImportRows(data.rows || []);
+          importResults?.classList.remove('hidden');
+          importMsg.textContent = `${data.count} registro(s) encontrado(s).`;
+          importMsg.classList.add('ok');
+
+          if (Array.isArray(data.rows) && data.rows.length > 0) {
+            fillIdentFields(data.rows[0]);
+          }
+        } catch (error) {
+          importMsg.textContent = error.message || 'Erro ao importar o arquivo.';
+          importResults?.classList.add('hidden');
+          if (importRows) importRows.innerHTML = '';
+        }
+      });
+
+      identForm?.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const formData = new FormData(identForm);
+        identGenerateBtn.disabled = true;
+        identGenerateMsg.textContent = 'Gerando etiqueta...';
+        identGenerateMsg.classList.remove('ok');
+
+        try {
+          const response = await fetch('/identificacao/gerar_preview', {
+            method: 'POST',
+            body: formData,
+          });
+          const data = await response.json();
+
+          if (!response.ok || !data.ok) {
+            throw new Error(data.message || 'Falha ao gerar etiqueta.');
+          }
+
+          const stamp = Date.now();
+          identPreviewIframe.src = `${data.preview_url}?t=${stamp}`;
+          identDownloadBtn.href = data.download_url;
+          identPreviewPanel?.classList.remove('hidden');
+          identGenerateMsg.textContent = 'Etiqueta gerada com sucesso.';
+          identGenerateMsg.classList.add('ok');
+        } catch (error) {
+          identGenerateMsg.textContent = error.message || 'Erro ao gerar etiqueta.';
+        } finally {
+          identGenerateBtn.disabled = false;
+        }
+      });
+
+      identPrintBtn?.addEventListener('click', () => {
+        if (identPreviewIframe?.contentWindow) {
+          identPreviewIframe.contentWindow.focus();
+          identPreviewIframe.contentWindow.print();
+        }
+      });
+
+      importCheckAll?.addEventListener('change', () => {
+        importRows?.querySelectorAll('.import-row-check').forEach((checkbox) => {
+          checkbox.checked = importCheckAll.checked;
+        });
+      });
+
+      identBatchBtn?.addEventListener('click', async () => {
+        const selectedIndexes = Array.from(importRows?.querySelectorAll('.import-row-check:checked') || []).map((item) =>
+          Number(item.dataset.index)
+        );
+
+        if (selectedIndexes.length === 0) {
+          importMsg.textContent = 'Selecione ao menos um registro para gerar em lote.';
+          importMsg.classList.remove('ok');
+          return;
+        }
+
+        const rows = selectedIndexes.map((index) => importedRowsData[index]).filter(Boolean);
+        identBatchBtn.disabled = true;
+        importMsg.textContent = 'Gerando lote...';
+        importMsg.classList.remove('ok');
+
+        try {
+          const response = await fetch('/identificacao/gerar_lote_preview', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ rows }),
+          });
+          const data = await response.json();
+
+          if (!response.ok || !data.ok) {
+            throw new Error(data.message || 'Falha ao gerar lote.');
+          }
+
+          const stamp = Date.now();
+          identPreviewIframe.src = `${data.preview_url}?t=${stamp}`;
+          identDownloadBtn.href = data.download_url;
+          identPreviewPanel?.classList.remove('hidden');
+          importMsg.textContent = 'Lote gerado com sucesso.';
+          importMsg.classList.add('ok');
+        } catch (error) {
+          importMsg.textContent = error.message || 'Erro ao gerar lote.';
+        } finally {
+          identBatchBtn.disabled = false;
+        }
+      });
+    </script>
+  </body>
+</html>

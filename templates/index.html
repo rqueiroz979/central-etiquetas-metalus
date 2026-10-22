@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>
+      {% if default_label_profile == 'usinados' %}Etiqueta de Usinados{% elif default_label_profile == 'bens_consumo' %}Etiqueta de Bens de Consumo{% else %}Etiqueta de Mat&eacute;ria-Prima{% endif %}
+    </title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v=style_version) }}" />
+  </head>
+  <body class="app-page">
+    <main class="app-shell page-shell">
+      <header class="page-header">
+        <a class="link-btn btn-secondary back-button" href="{{ url_for('home') }}">&larr; Central</a>
+
+        <div class="page-header-main">
+          <div class="page-brand">
+            <img
+              class="brand-logo"
+              src="{{ url_for('static', filename='logo-metalus.png', v=logo_version) }}"
+              alt="Logo Metalus"
+            />
+            <div class="page-brand-copy">
+              <h1 class="page-title">
+                {% if default_label_profile == 'usinados' %}
+                Etiqueta de Usinados
+                {% elif default_label_profile == 'bens_consumo' %}
+                Etiqueta de Bens de Consumo
+                {% else %}
+                Etiqueta de Mat&eacute;ria-Prima
+                {% endif %}
+              </h1>
+              <p class="page-subtitle">
+                {% if default_layout_mode == 'label_140x70' %}
+                Etiqueta 140 x 70 mm.
+                {% elif default_layout_mode == 'label_100x70' %}
+                Etiqueta 100 x 70 mm com &aacute;rea &uacute;til de 90 x 60 mm.
+                {% else %}
+                Cadastro e gera&ccedil;&atilde;o de etiquetas.
+                {% endif %}
+              </p>
+              <div class="page-meta">
+                <span class="meta-pill">{{ material_count }} materiais</span>
+                <span class="meta-pill">{{ fornecedor_count }} fornecedores</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <section class="single-panel">
+        <form id="label_form" method="post" action="/gerar" class="label-form">
+          <input type="hidden" name="label_profile" value="{{ default_label_profile }}" />
+          <div class="form-grid top-grid">
+            <label>
+              <span>C&oacute;digo do Produto</span>
+              <input id="codigo_produto" type="text" name="codigo" list="materiais_lista" required />
+              <small id="material_hint" class="hint"></small>
+            </label>
+            <label>
+              <span>Data</span>
+              <input type="text" name="data" value="{{ default_data }}" />
+            </label>
+            <label>
+              <span>N&ordm; Lote</span>
+              <input type="text" name="lote" />
+            </label>
+          </div>
+
+          <datalist id="materiais_lista">
+            {% for code, description in materials %}
+            <option value="{{ code }}" label="{{ description }}">{{ code }} - {{ description }}</option>
+            {% endfor %}
+          </datalist>
+
+          <div class="label-block">
+            <div class="form-grid desc-grid">
+              <label>
+                <span>Descri&ccedil;&atilde;o do material</span>
+                <input id="material_desc" type="text" name="material_desc" placeholder="Preenchimento autom&aacute;tico" />
+              </label>
+            </div>
+
+            <div class="form-grid ref-grid">
+              <label>
+                <span>Insp.</span>
+                <input type="text" name="insp" />
+              </label>
+              <label>
+                <span>Ref.</span>
+                <input type="text" name="ref" value="0,00" />
+              </label>
+              <label>
+                <span>Dimens&atilde;o 1</span>
+                <input type="text" name="dim1" placeholder="1200" />
+              </label>
+              <label>
+                <span>Dimens&atilde;o 2</span>
+                <input type="text" name="dim2" placeholder="2000" />
+              </label>
+            </div>
+
+            <div class="form-grid supplier-grid">
+              <label>
+                <span>Fornecedor (c&oacute;digo)</span>
+                <select id="fornecedor_code" name="fornecedor">
+                  <option value="">Selecione um fornecedor</option>
+                  {% for code, name in suppliers %}
+                  <option value="{{ code }}">{{ code }} - {{ name }}</option>
+                  {% endfor %}
+                </select>
+                <small id="fornecedor_hint" class="hint"></small>
+              </label>
+              <label>
+                <span>Nome do fornecedor</span>
+                <input id="fornecedor_nome" type="text" name="fornecedor_nome" placeholder="Preenchimento autom&aacute;tico" />
+              </label>
+            </div>
+
+            <div class="form-grid bottom-grid">
+              <label>
+                <span>PDC</span>
+                <input type="text" name="pdc" />
+              </label>
+              <label>
+                <span>Quant.</span>
+                <input type="text" name="quant" />
+              </label>
+              <label>
+                <span>NF</span>
+                <input type="text" name="nf" />
+              </label>
+              <label>
+                <span>O.S.</span>
+                <input type="text" name="os" />
+              </label>
+              <label>
+                <span>Pallet</span>
+                <input type="text" name="pallet" />
+              </label>
+            </div>
+
+            <section class="print-settings">
+              <div class="print-settings-head compact-section-head">
+                <h3>Configura&ccedil;&atilde;o de Impress&atilde;o</h3>
+              </div>
+
+              <div class="form-grid print-grid">
+                <label>
+                  <span>Quantidade de etiquetas</span>
+                  <input type="number" name="copies" value="12" min="1" max="300" />
+                </label>
+                <label>
+                  <span>Formato de impress&atilde;o</span>
+                  <select name="layout_mode">
+                    <option value="a4_12" {{ 'selected' if default_layout_mode == 'a4_12' else '' }}>A4 - 12 etiquetas 90,5 x 44,0 mm</option>
+                    <option value="label_100x70" {{ 'selected' if default_layout_mode == 'label_100x70' else '' }}>Etiqueta 100 x 70 mm - &aacute;rea &uacute;til 90 x 60 mm</option>
+                    <option value="label_140x70" {{ 'selected' if default_layout_mode == 'label_140x70' else '' }}>
+                      {% if default_label_profile == 'bens_consumo' %}Etiqueta de Bens de Consumo 140 x 70 mm{% else %}Etiqueta de Usinados 140 x 70 mm{% endif %}
+                    </option>
+                  </select>
+                </label>
+              </div>
+            </section>
+          </div>
+
+          <div class="actions">
+            <button id="generate_btn" class="btn-primary" type="submit">Gerar Etiqueta</button>
+            <small id="generate_msg" class="status"></small>
+          </div>
+        </form>
+
+        <section id="preview_panel" class="preview-panel hidden">
+          <div class="preview-head">
+            <h3>Preview do PDF</h3>
+            <div class="preview-actions">
+              <a id="download_btn" class="link-btn btn-secondary" href="#">Baixar PDF</a>
+              <button id="print_btn" class="ghost btn-secondary" type="button">Imprimir</button>
+            </div>
+          </div>
+          <iframe id="preview_iframe" title="Preview da Etiqueta"></iframe>
+        </section>
+      </section>
+    </main>
+
+    <script>
+      const labelForm = document.getElementById('label_form');
+      const generateBtn = document.getElementById('generate_btn');
+      const generateMsg = document.getElementById('generate_msg');
+      const previewPanel = document.getElementById('preview_panel');
+      const previewIframe = document.getElementById('preview_iframe');
+      const downloadBtn = document.getElementById('download_btn');
+      const printBtn = document.getElementById('print_btn');
+
+      const materialCode = document.getElementById('codigo_produto');
+      const fornecedorCode = document.getElementById('fornecedor_code');
+      const materialHint = document.getElementById('material_hint');
+      const fornecedorHint = document.getElementById('fornecedor_hint');
+      const materialDesc = document.getElementById('material_desc');
+      const fornecedorNome = document.getElementById('fornecedor_nome');
+
+      let lookupTimer = null;
+
+      function setLookupHints(data) {
+        const mCode = (materialCode?.value || '').trim();
+        const fCode = (fornecedorCode?.value || '').trim();
+
+        if (materialHint) {
+          if (!mCode) {
+            materialHint.textContent = '';
+          } else if (data.material_found) {
+            materialHint.textContent = `Material encontrado: ${data.material_desc}`;
+          } else {
+            materialHint.textContent = 'Material n\u00e3o encontrado no cadastro.';
+          }
+        }
+
+        if (fornecedorHint) {
+          if (!fCode) {
+            fornecedorHint.textContent = '';
+          } else if (data.fornecedor_found) {
+            fornecedorHint.textContent = `Fornecedor encontrado: ${data.fornecedor_nome}`;
+          } else {
+            fornecedorHint.textContent = 'Fornecedor n\u00e3o encontrado no cadastro.';
+          }
+        }
+
+        if (materialDesc && data.material_found && (!materialDesc.value.trim() || materialDesc.dataset.auto === '1')) {
+          materialDesc.value = data.material_desc;
+          materialDesc.dataset.auto = '1';
+        }
+
+        if (fornecedorNome && data.fornecedor_found && (!fornecedorNome.value.trim() || fornecedorNome.dataset.auto === '1')) {
+          fornecedorNome.value = data.fornecedor_nome;
+          fornecedorNome.dataset.auto = '1';
+        }
+      }
+
+      function lookupData() {
+        const params = new URLSearchParams({
+          material_code: (materialCode?.value || '').trim(),
+          fornecedor_code: (fornecedorCode?.value || '').trim(),
+        });
+
+        fetch(`/lookup?${params.toString()}`)
+          .then((res) => res.json())
+          .then(setLookupHints)
+          .catch(() => {
+            if (materialHint) materialHint.textContent = '';
+            if (fornecedorHint) fornecedorHint.textContent = '';
+          });
+      }
+
+      function scheduleLookup() {
+        clearTimeout(lookupTimer);
+        lookupTimer = setTimeout(lookupData, 250);
+      }
+
+      if (materialCode) materialCode.addEventListener('input', scheduleLookup);
+      if (fornecedorCode) fornecedorCode.addEventListener('change', scheduleLookup);
+      if (materialDesc) materialDesc.addEventListener('input', () => (materialDesc.dataset.auto = '0'));
+      if (fornecedorNome) fornecedorNome.addEventListener('input', () => (fornecedorNome.dataset.auto = '0'));
+      lookupData();
+
+      function getFormFields() {
+        return Array.from(labelForm.querySelectorAll('input, select')).filter((el) => {
+          if (el.disabled) return false;
+          if (el.type === 'hidden' || el.type === 'button' || el.type === 'submit') return false;
+          return true;
+        });
+      }
+
+      labelForm?.addEventListener('keydown', (event) => {
+        if (event.key !== 'Enter') return;
+        const target = event.target;
+        if (!target || (target.tagName !== 'INPUT' && target.tagName !== 'SELECT')) return;
+
+        event.preventDefault();
+
+        const fields = getFormFields();
+        const currentIndex = fields.indexOf(target);
+        if (currentIndex >= 0 && currentIndex < fields.length - 1) {
+          const nextField = fields[currentIndex + 1];
+          nextField.focus();
+          if (typeof nextField.select === 'function') {
+            nextField.select();
+          }
+        }
+      });
+
+      async function generatePreview() {
+        if (!labelForm) return;
+
+        const formData = new FormData(labelForm);
+        generateBtn.disabled = true;
+        generateMsg.textContent = 'Gerando etiqueta...';
+
+        try {
+          const resp = await fetch('/gerar_preview', {
+            method: 'POST',
+            body: formData,
+          });
+
+          const data = await resp.json();
+          if (!resp.ok || !data.ok) {
+            throw new Error(data.message || 'Falha ao gerar etiqueta.');
+          }
+
+          const stamp = Date.now();
+          previewIframe.src = `${data.preview_url}?t=${stamp}`;
+          downloadBtn.href = data.download_url;
+          previewPanel.classList.remove('hidden');
+          generateMsg.textContent = 'Etiqueta gerada com sucesso.';
+          generateMsg.classList.add('ok');
+        } catch (err) {
+          generateMsg.textContent = err.message || 'Erro ao gerar etiqueta.';
+          generateMsg.classList.remove('ok');
+        } finally {
+          generateBtn.disabled = false;
+        }
+      }
+
+      labelForm?.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        await generatePreview();
+      });
+
+      printBtn?.addEventListener('click', () => {
+        if (previewIframe?.contentWindow) {
+          previewIframe.contentWindow.focus();
+          previewIframe.contentWindow.print();
+        }
+      });
+    </script>
+  </body>
+</html>
