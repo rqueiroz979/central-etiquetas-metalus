@@ -25,7 +25,7 @@ if errorlevel 1 exit /b 1
 %BUILD_PYTHON% -m pip install -r requirements-build.txt
 if errorlevel 1 exit /b 1
 
-%BUILD_PYTHON% -m PyInstaller --clean --noconfirm --onedir --windowed --name ALMOXARIFADO --distpath dist\windows --workpath build\windows-work --specpath build\windows-spec --paths "%CD%\ALMOXARIFADO_OFFLINE" --collect-all reportlab --hidden-import PySide6.QtPdf --hidden-import PySide6.QtPdfWidgets --hidden-import PySide6.QtPrintSupport --add-data "%CD%\ALMOXARIFADO_OFFLINE\static;static" --add-data "%CD%\ALMOXARIFADO_OFFLINE\config.json;." "%CD%\ALMOXARIFADO_OFFLINE\qt_app.py"
+%BUILD_PYTHON% -m PyInstaller --clean --noconfirm --onedir --windowed --name ALMOXARIFADO --distpath dist\windows --workpath build\windows-work --specpath build\windows-spec --paths "%CD%\ALMOXARIFADO_OFFLINE" --collect-all reportlab --hidden-import PySide6.QtPdf --hidden-import PySide6.QtPdfWidgets --hidden-import PySide6.QtPrintSupport --add-data "%CD%\ALMOXARIFADO_OFFLINE\static;static" --add-data "%CD%\ALMOXARIFADO_OFFLINE\seed\lookups.db;seed" --add-data "%CD%\ALMOXARIFADO_OFFLINE\config.json;." "%CD%\ALMOXARIFADO_OFFLINE\qt_app.py"
 if errorlevel 1 exit /b 1
 
 copy /Y "ALMOXARIFADO_OFFLINE\INICIAR_ALMOXARIFADO_PORTATIL.bat" "dist\windows\ALMOXARIFADO\INICIAR_ALMOXARIFADO.bat" >nul

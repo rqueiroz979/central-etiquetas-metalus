@@ -6,7 +6,11 @@ a = Analysis(
     ["qt_app.py"],
     pathex=[],
     binaries=[],
-    datas=[],
+    datas=[
+        ("static", "static"),
+        ("config.json", "."),
+        ("seed/lookups.db", "seed"),
+    ],
     hiddenimports=[
         "PySide6.QtPdf",
         "PySide6.QtPdfWidgets",

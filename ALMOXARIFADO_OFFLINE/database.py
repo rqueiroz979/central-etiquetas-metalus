@@ -1,4 +1,5 @@
 import csv
+import hashlib
 import io
 import sqlite3
 import unicodedata
@@ -53,6 +54,62 @@ def init_db(db_path: Path):
 
     conn.commit()
     conn.close()
+
+
+def seed_lookup_data(db_path: Path, seed_path: Path):
+    if not seed_path.is_file():
+        return False
+
+    seed_hash = hashlib.sha256(seed_path.read_bytes()).hexdigest()
+    conn = sqlite3.connect(db_path)
+    attached = False
+    try:
+        conn.execute("ATTACH DATABASE ? AS lookup_seed", (str(seed_path),))
+        attached = True
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS app_metadata (
+                key TEXT PRIMARY KEY,
+                value TEXT NOT NULL
+            )
+            """
+        )
+        row = conn.execute(
+            "SELECT value FROM app_metadata WHERE key = ?",
+            ("lookup_seed_sha256",),
+        ).fetchone()
+        if row and row[0] == seed_hash:
+            return False
+
+        conn.execute(
+            """
+            INSERT OR IGNORE INTO materials (code, description)
+            SELECT code, description FROM lookup_seed.materials
+            """
+        )
+        conn.execute(
+            """
+            INSERT OR IGNORE INTO suppliers (code, name)
+            SELECT code, name FROM lookup_seed.suppliers
+            """
+        )
+        conn.execute(
+            """
+            INSERT INTO app_metadata (key, value)
+            VALUES (?, ?)
+            ON CONFLICT(key) DO UPDATE SET value = excluded.value
+            """,
+            ("lookup_seed_sha256", seed_hash),
+        )
+        conn.commit()
+        return True
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        if attached:
+            conn.execute("DETACH DATABASE lookup_seed")
+        conn.close()
 
 
 def _read_sheet_map(doc, sheet_name: str):

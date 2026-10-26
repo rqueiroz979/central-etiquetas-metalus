@@ -186,6 +186,7 @@ Para importar:
 5. Aguarde a mensagem de conclusão.
 
 Ao terminar, o sistema informa quantos materiais e fornecedores foram inseridos ou atualizados.
+O instalador já inclui os cadastros iniciais de materiais e fornecedores da versão Windows. Cada computador mantém seu próprio banco local; os registros já existentes são preservados, e novas alterações não são sincronizadas entre sistemas.
 
 ## 13. Cadastro manual
 

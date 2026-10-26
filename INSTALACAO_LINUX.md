@@ -24,6 +24,8 @@ sudo apt install ./dist/linux/almoxarifado-metalus_1.0.0_*.deb
 
 Abra **Almoxarifado** pelo menu de aplicativos. O pacote declara as bibliotecas nativas usadas pelo Qt e pelo PDF; o APT instala automaticamente as que ainda faltam durante a instalação. O computador precisa de internet nessa etapa se precisar baixar dependências. Python e pasta-fonte não são necessários.
 
+No primeiro início, o aplicativo copia para o banco local os cadastros iniciais da versão Windows (materiais e fornecedores). Registros já existentes no banco do Linux são preservados; a importação não sobrescreve códigos que já tenham cadastro.
+
 Para remover:
 
 ```bash

@@ -52,6 +52,7 @@ from database import (
     lookup_material,
     lookup_supplier,
     normalize_code,
+    seed_lookup_data,
     upsert_material,
     upsert_supplier,
 )
@@ -1133,6 +1134,7 @@ class AlmoxarifadoWindow(QMainWindow):
         cleanup_session_output()
         self.output_dir.mkdir(parents=True, exist_ok=True)
         init_db(self.db_path)
+        seed_lookup_data(self.db_path, RESOURCE_ROOT / "seed" / "lookups.db")
 
         self.thread_pool = QThreadPool.globalInstance()
         self.last_pdf_path = None
@@ -1543,6 +1545,7 @@ class AlmoxarifadoWindow(QMainWindow):
         self.entries["codigo"].textEdited.connect(self.schedule_lookup_data)
         self.entries["fornecedor"].textEdited.connect(self.schedule_lookup_data)
         self.entries["pallet"].textEdited.connect(self.sync_pallet_count_from_field)
+        self.copies_spin.valueChanged.connect(self.sync_pallet_field_from_copy_count)
         self.entries["quant"].textEdited.connect(self.sync_total_quantity_from_field)
 
         shell_layout.addWidget(form, 1)
@@ -1836,8 +1839,30 @@ class AlmoxarifadoWindow(QMainWindow):
                 count = parse_quantity(text, "Pallet")
             except ValueError:
                 return
+        if count < 1 or count > MAX_LABEL_COPIES:
+            return
         if self.copies_spin.value() != count:
-            self.copies_spin.setValue(count)
+            self._syncing_pallet_count = True
+            try:
+                self.copies_spin.setValue(count)
+            finally:
+                self._syncing_pallet_count = False
+
+    def sync_pallet_field_from_copy_count(self, count):
+        if getattr(self, "_syncing_pallet_count", False):
+            return
+        pallet_field = self.entries["pallet"]
+        text = pallet_field.text().strip()
+        if not text:
+            return
+        try:
+            pallet_count = parse_quantity(text, "Pallet")
+        except ValueError:
+            return
+        if not 1 <= pallet_count <= MAX_LABEL_COPIES:
+            return
+        if text != str(count):
+            pallet_field.setText(str(count))
 
     def sync_total_quantity_from_field(self):
         try:

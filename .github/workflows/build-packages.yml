@@ -41,6 +41,7 @@ jobs:
           $appExe = Join-Path $appDir "ALMOXARIFADO.exe"
           if (-not (Test-Path $appExe)) { throw "Installed application was not found." }
           if (Test-Path (Join-Path $appDir "portable.flag")) { throw "Portable marker was incorrectly installed." }
+          $env:LOCALAPPDATA = Join-Path $env:RUNNER_TEMP "almoxarifado-test-data"
           $env:QT_QPA_PLATFORM = "offscreen"
           $process = Start-Process -FilePath $appExe -PassThru
           Start-Sleep -Seconds 8
@@ -48,7 +49,10 @@ jobs:
           if ($process.HasExited) { throw "Installed app exited with code $($process.ExitCode)." }
           Stop-Process -Id $process.Id
           $userData = Join-Path $env:LOCALAPPDATA "Almoxarifado"
-          if (-not (Test-Path (Join-Path $userData "data\etiquetas.db"))) { throw "The app did not create its per-user database." }
+          $dbPath = Join-Path $userData "data\etiquetas.db"
+          if (-not (Test-Path $dbPath)) { throw "The app did not create its per-user database." }
+          $lookupCounts = python -c "import sqlite3,sys;c=sqlite3.connect(sys.argv[1]);r=tuple(c.execute(f'SELECT COUNT(*) FROM {t}').fetchone()[0] for t in ('materials','suppliers'));c.close();print(r)" $dbPath
+          if ($LASTEXITCODE -ne 0 -or $lookupCounts.Trim() -ne "(4501, 52)") { throw "The app did not seed the expected Windows lookup records: $lookupCounts" }
           $uninstaller = Join-Path $appDir "unins000.exe"
           $uninstall = Start-Process -FilePath $uninstaller -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART" -Wait -PassThru
           if ($uninstall.ExitCode -ne 0) { throw "Uninstaller exited with code $($uninstall.ExitCode)." }
@@ -87,7 +91,9 @@ jobs:
           if [ "$status" -ne 124 ]; then
             exit "$status"
           fi
-          test -s "$RUNNER_TEMP/almoxarifado-test-data/Almoxarifado/data/etiquetas.db"
+          db_path="$RUNNER_TEMP/almoxarifado-test-data/Almoxarifado/data/etiquetas.db"
+          test -s "$db_path"
+          python3 -c 'import sqlite3,sys; c=sqlite3.connect(sys.argv[1]); counts=tuple(c.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0] for table in ("materials","suppliers")); c.close(); print(f"Seeded records: {counts}"); sys.exit(0 if counts == (4501, 52) else 1)' "$db_path"
 
       - name: Upload Debian package
         uses: actions/upload-artifact@v4

@@ -34,6 +34,7 @@ fi
     --hidden-import PySide6.QtPdfWidgets \
     --hidden-import PySide6.QtPrintSupport \
     --add-data "$SOURCE_DIR/static:static" \
+    --add-data "$SOURCE_DIR/seed/lookups.db:seed" \
     --add-data "$SOURCE_DIR/config.json:." \
     "$SOURCE_DIR/qt_app.py"
 

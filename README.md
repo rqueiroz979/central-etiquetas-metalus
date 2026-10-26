@@ -58,6 +58,7 @@ python ALMOXARIFADO_OFFLINE/qt_app.py
 
 - No Windows portátil, configuração e banco ficam junto ao executável: `config.json` e `data\etiquetas.db`.
 - No Zorin, os dados ficam em `$XDG_DATA_HOME/Almoxarifado` ou, se a variável não estiver definida, em `~/.local/share/Almoxarifado`. Assim, a instalação em `/opt` não precisa de permissão de escrita.
+- O primeiro início já carrega os cadastros iniciais da versão Windows: 4.501 materiais e 52 fornecedores. Cada instalação mantém seu próprio banco; os cadastros existentes no computador são preservados e não são sincronizados entre Windows e Linux. Para atualizar os dados, use **Cadastros → Importar tabela** (CSV, ODS, XLSX ou XLSM).
 - A janela inicial considera a área de tela disponível; em larguras menores, os painéis passam de lado a lado para uma disposição vertical. As páginas também permitem rolagem para acessar o conteúdo em telas com pouca altura.
 
 ## Instaladores gerados pelo GitHub
