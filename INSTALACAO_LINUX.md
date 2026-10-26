@@ -1,52 +1,50 @@
-# Gerar e instalar no Zorin OS Lite
+# Instalar o Almoxarifado no Zorin OS
 
-O usuário final recebe somente um pacote `.deb`, sem a pasta-fonte. O pacote inclui o executável e os arquivos de interface; o usuário não precisa instalar Python nem usar `pip`. Gere o `.deb` em uma máquina Zorin OS Lite ou Ubuntu da mesma arquitetura do computador de destino.
+O aplicativo para Linux é a mesma versão desktop Qt usada como base no Windows. O pacote abre uma janela própria, sem navegador, e não exige Python no computador de destino.
 
 ## Gerar o pacote
 
-1. Na máquina de desenvolvimento Linux, instale as ferramentas de build:
-
-	```bash
-	sudo apt update
-	sudo apt install -y python3 python3-venv python3-pip dpkg-dev
-	```
-
-2. Na pasta-fonte do projeto, rode:
-
-	```bash
-	bash build_linux.sh
-	```
-
-	O primeiro build precisa de internet para instalar as dependências de build. O pacote final será criado em `dist/linux/`.
-
-3. Copie somente o arquivo `.deb` gerado para o computador do usuário. Não copie a pasta-fonte, `.venv`, `build/` ou `requirements.txt`.
-
-## Instalar no Zorin
-
-1. Copie o `.deb` para o computador com Zorin OS Lite.
-2. Dê duplo clique no arquivo e escolha instalar pelo instalador de aplicativos. Se solicitado, informe a senha de uma conta administradora.
-3. Abra **Central de Etiquetas Metalus** pelo menu. Uma janela de terminal acompanha o app; mantenha-a aberta enquanto estiver usando o sistema. O navegador será aberto automaticamente.
-
-Alternativamente, no terminal, navegue até a pasta do `.deb` e instale com:
+Faça o build no Zorin OS ou em Ubuntu compatível, usando a mesma arquitetura do computador de destino:
 
 ```bash
-sudo apt install ./central-etiquetas-metalus_1.0.0_*.deb
+sudo apt update
+sudo apt install -y python3 python3-venv python3-pip dpkg-dev
+bash build_linux.sh
 ```
 
-O APT instala automaticamente as dependências nativas declaradas no pacote. O app não exige Python, acesso à internet ou código-fonte no computador do usuário após a instalação.
+O primeiro build precisa de internet para baixar as dependências de empacotamento. O arquivo `.deb` será criado em `dist/linux/`.
 
-## Remover
+## Instalar e abrir
+
+Instale pelo gerenciador de aplicativos ou pelo terminal:
 
 ```bash
-sudo apt remove central-etiquetas-metalus
+sudo apt install ./dist/linux/almoxarifado-metalus_1.0.0_*.deb
+```
+
+Abra **Almoxarifado** pelo menu de aplicativos. O pacote declara as bibliotecas nativas usadas pelo Qt e pelo PDF; o APT instala automaticamente as que ainda faltam durante a instalação. O computador precisa de internet nessa etapa se precisar baixar dependências. Python e pasta-fonte não são necessários.
+
+Para remover:
+
+```bash
+sudo apt remove almoxarifado-metalus
 ```
 
 ## Dados do usuário
 
-Configuração, banco de dados, backups e PDFs ficam em `~/.local/share/CentralEtiquetasMetalus`, separados dos arquivos instalados. Inclua essa pasta nos backups para preservar os dados.
+O banco SQLite e a configuração ficam separados dos binários instalados:
+
+- `$XDG_DATA_HOME/Almoxarifado`, se `XDG_DATA_HOME` estiver definido;
+- `~/.local/share/Almoxarifado`, caso contrário.
+
+Inclua essa pasta nos backups para preservar os cadastros.
 
 ## Problemas comuns
 
-- **Arquitetura incompatível:** o pacote precisa ser gerado para a arquitetura do computador de destino. O nome do arquivo mostra a arquitetura, como `amd64` ou `arm64`.
-- **Dependências do sistema:** instale pelo terminal com `sudo apt install ./arquivo.deb` para que o APT resolva as dependências automaticamente.
-- **Porta 5000 ocupada:** feche o programa que estiver usando essa porta e abra o app novamente.
+- **Arquitetura incompatível:** gere o `.deb` na mesma arquitetura do computador de destino (por exemplo, `amd64`).
+- **Dependências nativas:** instale com `sudo apt install ./arquivo.deb` para que o APT resolva os pacotes necessários.
+- **Build:** gere o `.deb` no Linux; um pacote Windows não pode produzir o executável Linux e vice-versa.
+
+## Baixar pelo GitHub
+
+O workflow de build gera o instalador Linux em cada execução concluída. No GitHub, abra **Actions → Build desktop packages**, selecione uma execução e baixe o artefato **Almoxarifado-Zorin-Linux**. Antes de publicar o artefato, o workflow instala o `.deb` com o APT e testa a inicialização do aplicativo.

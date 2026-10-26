@@ -4,6 +4,7 @@ import io
 import json
 import os
 import posixpath
+import re
 import shutil
 import sqlite3
 import subprocess
@@ -59,8 +60,19 @@ from pdf_label import generate_label_pdf
 
 APP_ROOT = Path(sys.executable).resolve().parent if getattr(sys, "frozen", False) else Path(__file__).resolve().parent
 RESOURCE_ROOT = Path(getattr(sys, "_MEIPASS", APP_ROOT))
-CONFIG_PATH = APP_ROOT / "config.json"
-DEFAULT_DB_PATH = APP_ROOT / "data" / "etiquetas.db"
+if os.name == "nt" and (
+    not getattr(sys, "frozen", False) or (APP_ROOT / "portable.flag").exists()
+):
+    APP_DATA_DIR = APP_ROOT
+elif os.name == "nt":
+    APP_DATA_DIR = Path(os.environ.get("LOCALAPPDATA") or Path.home() / "AppData" / "Local") / "Almoxarifado"
+else:
+    xdg_data_home = os.environ.get("XDG_DATA_HOME")
+    data_root = Path(xdg_data_home) if xdg_data_home else Path.home() / ".local" / "share"
+    APP_DATA_DIR = data_root / "Almoxarifado"
+CONFIG_PATH = APP_DATA_DIR / "config.json"
+DEFAULT_CONFIG_PATH = RESOURCE_ROOT / "config.json"
+DEFAULT_DB_PATH = APP_DATA_DIR / "data" / "etiquetas.db"
 SESSION_OUTPUT_DIR = Path(tempfile.gettempdir()) / "almoxarifado_offline" / str(os.getpid())
 
 
@@ -102,6 +114,22 @@ PRINT_FORMATS = {
     },
 }
 
+MAX_LABEL_COPIES = 300
+MAX_QUANTITY = 2_147_483_647
+
+
+def parse_quantity(value, field_name):
+    text = str("" if value is None else value).strip()
+    if text.isascii() and text.isdigit():
+        return int(text)
+    if re.fullmatch(r"[0-9]{1,3}(?:\.[0-9]{3})+", text):
+        return int(text.replace(".", ""))
+    raise ValueError(
+        f"{field_name}: informe uma quantidade inteira, sem casas decimais "
+        "ou com ponto para separar milhares (exemplo: 1.000)."
+    )
+
+
 LIGHT = {
     "bg": "#f3f4f6",
     "shell": "#ffffff",
@@ -139,6 +167,9 @@ class FunctionWorker(QRunnable):
 
 
 def load_config():
+    CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
+    if not CONFIG_PATH.exists() and DEFAULT_CONFIG_PATH.exists():
+        shutil.copy2(DEFAULT_CONFIG_PATH, CONFIG_PATH)
     if not CONFIG_PATH.exists():
         return {}
     with CONFIG_PATH.open("r", encoding="utf-8") as file:
@@ -148,7 +179,7 @@ def load_config():
 def path_from_config(config, key, fallback):
     value = str(config.get(key) or "").strip()
     path = Path(value) if value else fallback
-    return path if path.is_absolute() else APP_ROOT / path
+    return path if path.is_absolute() else APP_DATA_DIR / path
 
 
 def app_icon_path():
@@ -891,7 +922,15 @@ class LookupDialog(QDialog):
     def __init__(self, parent, title, value_header, loader):
         super().__init__(parent)
         self.setWindowTitle(title)
-        self.resize(760, 520)
+        screen = QApplication.primaryScreen()
+        if screen:
+            available = screen.availableGeometry()
+            self.resize(
+                min(760, int(available.width() * 0.95)),
+                min(520, int(available.height() * 0.9)),
+            )
+        else:
+            self.resize(760, 520)
         self.loader = loader
         self.page = 1
         self.pages = 1
@@ -980,8 +1019,19 @@ class PdfPreviewDialog(QDialog):
         super().__init__(parent)
         self.pdf_path = Path(pdf_path)
         self.setWindowTitle(f"Visualizar etiqueta - {self.pdf_path.name}")
-        self.resize(980, 720)
-        self.setMinimumSize(700, 560)
+        screen = QApplication.primaryScreen()
+        if screen:
+            available = screen.availableGeometry()
+            min_width = min(700, available.width())
+            min_height = min(560, available.height())
+            self.setMinimumSize(min_width, min_height)
+            self.resize(
+                max(min_width, min(980, int(available.width() * 0.95))),
+                max(min_height, min(720, int(available.height() * 0.9))),
+            )
+        else:
+            self.resize(980, 720)
+            self.setMinimumSize(700, 560)
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(18, 18, 18, 18)
@@ -1031,7 +1081,7 @@ class PdfPreviewDialog(QDialog):
         target, _ = QFileDialog.getSaveFileName(
             self,
             "Salvar etiqueta",
-            str(APP_ROOT / self.pdf_path.name),
+            str(APP_DATA_DIR / self.pdf_path.name),
             "PDF (*.pdf)",
         )
         if not target:
@@ -1054,8 +1104,21 @@ class AlmoxarifadoWindow(QMainWindow):
         icon_path = app_icon_path()
         if icon_path.exists():
             self.setWindowIcon(QIcon(str(icon_path)))
-        self.resize(1040, 820)
-        self.setMinimumSize(720, 620)
+        screen = QApplication.primaryScreen()
+        if screen:
+            available = screen.availableGeometry()
+            self.content_scale = min(1.0, max(0.5, available.width() / 960))
+            min_width = min(720, max(1, available.width() - 32))
+            min_height = min(620, max(1, available.height() - 32))
+            self.setMinimumSize(min_width, min_height)
+            self.resize(
+                max(min_width, min(1040, int(available.width() * 0.95))),
+                max(min_height, min(820, int(available.height() * 0.92))),
+            )
+        else:
+            self.content_scale = 1.0
+            self.resize(1040, 820)
+            self.setMinimumSize(720, 620)
 
         config = load_config()
         self.db_path = path_from_config(config, "db_path", DEFAULT_DB_PATH)
@@ -1124,12 +1187,15 @@ class AlmoxarifadoWindow(QMainWindow):
         self.apply_zoom()
 
     def apply_zoom(self):
-        width = int(1180 * self.zoom_factor)
-        min_width = int(660 * self.zoom_factor)
+        width = int(1180 * self.zoom_factor * self.content_scale)
+        min_width = int(660 * self.zoom_factor * self.content_scale)
         for shell in self.scaled_shells:
             shell.setMinimumWidth(min_width)
             shell.setMaximumWidth(width)
         self.update_responsive_layout()
+
+    def scaled_width(self, width):
+        return int(width * self.content_scale)
 
     def card(self, class_name="card"):
         frame = QFrame()
@@ -1224,7 +1290,7 @@ class AlmoxarifadoWindow(QMainWindow):
         layout = QHBoxLayout(header)
         layout.setContentsMargins(18, 14, 18, 14)
         layout.setSpacing(24)
-        header.setMinimumWidth(640)
+        header.setMinimumWidth(self.scaled_width(640))
         layout.addWidget(self.build_logo(108), 0, Qt.AlignVCenter)
 
         heading = QVBoxLayout()
@@ -1238,7 +1304,7 @@ class AlmoxarifadoWindow(QMainWindow):
         right = QVBoxLayout()
         right.setSpacing(8)
         cad = self.card()
-        cad.setMinimumWidth(150)
+        cad.setMinimumWidth(self.scaled_width(150))
         cad.setCursor(Qt.PointingHandCursor)
         cad.mousePressEvent = lambda _event: self.stack.setCurrentWidget(self.cadastros_page)
         cad_layout = QVBoxLayout(cad)
@@ -1269,8 +1335,8 @@ class AlmoxarifadoWindow(QMainWindow):
         layout.setContentsMargins(20, 18, 20, 18)
         shell = QFrame()
         shell.setObjectName("shell")
-        shell.setMinimumWidth(660)
-        shell.setMaximumWidth(1180)
+        shell.setMinimumWidth(self.scaled_width(660))
+        shell.setMaximumWidth(self.scaled_width(1180))
         self.scaled_shells.append(shell)
         shell_layout = QVBoxLayout(shell)
         shell_layout.setContentsMargins(14, 14, 14, 14)
@@ -1278,7 +1344,7 @@ class AlmoxarifadoWindow(QMainWindow):
         shell_layout.addWidget(self.build_header())
 
         form = self.card()
-        form.setMinimumWidth(640)
+        form.setMinimumWidth(self.scaled_width(640))
         form_layout = QVBoxLayout(form)
         form_layout.setContentsMargins(14, 14, 14, 14)
         form_layout.setSpacing(12)
@@ -1317,7 +1383,7 @@ class AlmoxarifadoWindow(QMainWindow):
         bottom = QHBoxLayout()
         self.home_bottom_layout = bottom
         comp = self.card("soft")
-        comp.setMinimumWidth(340)
+        comp.setMinimumWidth(self.scaled_width(340))
         comp_layout = QGridLayout(comp)
         comp_layout.setContentsMargins(12, 12, 12, 12)
         comp_layout.setHorizontalSpacing(10)
@@ -1336,7 +1402,7 @@ class AlmoxarifadoWindow(QMainWindow):
         left_column.addWidget(comp, 0, Qt.AlignTop)
 
         print_card = self.card("soft")
-        print_card.setMinimumWidth(390)
+        print_card.setMinimumWidth(self.scaled_width(390))
         print_layout = QVBoxLayout(print_card)
         print_layout.setContentsMargins(12, 12, 12, 12)
         print_layout.setSpacing(9)
@@ -1347,7 +1413,7 @@ class AlmoxarifadoWindow(QMainWindow):
         copies_label = QLabel("Quantidade de etiquetas")
         copies_label.setProperty("class", "field")
         self.copies_spin = QSpinBox()
-        self.copies_spin.setRange(1, 300)
+        self.copies_spin.setRange(1, MAX_LABEL_COPIES)
         self.copies_spin.setValue(1)
         self.copies_spin.setSingleStep(1)
         self.copies_spin.lineEdit().returnPressed.connect(self.focusNextChild)
@@ -1368,13 +1434,14 @@ class AlmoxarifadoWindow(QMainWindow):
         total_label = QLabel("Qtd. total")
         total_label.setProperty("class", "field")
         self.total_received_spin = QSpinBox()
-        self.total_received_spin.setRange(0, 999999)
+        self.total_received_spin.setRange(0, MAX_QUANTITY)
         self.total_received_spin.setValue(0)
         self.total_received_spin.lineEdit().returnPressed.connect(self.focusNextChild)
+        self.total_received_spin.valueChanged.connect(self.sync_quantity_field_from_total_spin)
         divide_btn = QPushButton("Dividir auto.")
         divide_btn.setToolTip("Dividir automaticamente")
-        divide_btn.setMinimumWidth(120)
-        divide_btn.setMaximumWidth(140)
+        divide_btn.setMinimumWidth(self.scaled_width(120))
+        divide_btn.setMaximumWidth(self.scaled_width(140))
         divide_btn.clicked.connect(self.divide_pallet_quantities)
         auto_line.addWidget(total_label)
         auto_line.addWidget(self.total_received_spin, 1)
@@ -1503,8 +1570,8 @@ class AlmoxarifadoWindow(QMainWindow):
         layout.setContentsMargins(20, 18, 20, 18)
         shell = QFrame()
         shell.setObjectName("shell")
-        shell.setMinimumWidth(660)
-        shell.setMaximumWidth(1180)
+        shell.setMinimumWidth(self.scaled_width(660))
+        shell.setMaximumWidth(self.scaled_width(1180))
         self.scaled_shells.append(shell)
         shell_layout = QVBoxLayout(shell)
         shell_layout.setContentsMargins(14, 14, 14, 14)
@@ -1521,7 +1588,7 @@ class AlmoxarifadoWindow(QMainWindow):
         shell_layout.addLayout(top)
 
         head = self.card()
-        head.setMinimumWidth(640)
+        head.setMinimumWidth(self.scaled_width(640))
         head_layout = QHBoxLayout(head)
         head_layout.setContentsMargins(16, 14, 16, 14)
         head_layout.setSpacing(18)
@@ -1540,7 +1607,7 @@ class AlmoxarifadoWindow(QMainWindow):
         shell_layout.addWidget(head)
 
         body = self.card()
-        body.setMinimumWidth(640)
+        body.setMinimumWidth(self.scaled_width(640))
         body_layout = QVBoxLayout(body)
         body_layout.setContentsMargins(14, 14, 14, 14)
         body_layout.setSpacing(12)
@@ -1561,7 +1628,7 @@ class AlmoxarifadoWindow(QMainWindow):
         cards = QHBoxLayout()
         self.cad_cards_layout = cards
         import_card = self.card()
-        import_card.setMinimumWidth(300)
+        import_card.setMinimumWidth(self.scaled_width(300))
         import_layout = QVBoxLayout(import_card)
         import_layout.setContentsMargins(14, 14, 14, 14)
         import_layout.setSpacing(10)
@@ -1586,7 +1653,7 @@ class AlmoxarifadoWindow(QMainWindow):
         cards.addWidget(import_card)
 
         edit_card = self.card()
-        edit_card.setMinimumWidth(300)
+        edit_card.setMinimumWidth(self.scaled_width(300))
         edit_layout = QVBoxLayout(edit_card)
         edit_layout.setContentsMargins(14, 14, 14, 14)
         edit_layout.setSpacing(9)
@@ -1611,7 +1678,7 @@ class AlmoxarifadoWindow(QMainWindow):
         body_layout.addLayout(cards)
 
         table_card = self.card()
-        table_card.setMinimumWidth(610)
+        table_card.setMinimumWidth(self.scaled_width(610))
         table_layout = QVBoxLayout(table_card)
         table_layout.setContentsMargins(14, 14, 14, 14)
         table_layout.setSpacing(10)
@@ -1760,24 +1827,35 @@ class AlmoxarifadoWindow(QMainWindow):
     def schedule_lookup_data(self):
         self.lookup_timer.start()
 
-    def _first_int_from_text(self, text):
-        digits = ""
-        for char in str(text or ""):
-            if char.isdigit():
-                digits += char
-            elif digits:
-                break
-        return int(digits) if digits else 0
-
     def sync_pallet_count_from_field(self):
-        count = self._first_int_from_text(self.entries["pallet"].text())
-        if count > 1 and self.copies_spin.value() != count:
+        text = self.entries["pallet"].text().strip()
+        if not text:
+            count = 1
+        else:
+            try:
+                count = parse_quantity(text, "Pallet")
+            except ValueError:
+                return
+        if self.copies_spin.value() != count:
             self.copies_spin.setValue(count)
 
     def sync_total_quantity_from_field(self):
-        quantity = self._first_int_from_text(self.entries["quant"].text())
-        if hasattr(self, "total_received_spin") and self.total_received_spin.value() != quantity:
+        try:
+            quantity = parse_quantity(self.entries["quant"].text(), "Quantidade")
+        except ValueError:
+            return
+        if quantity <= MAX_QUANTITY and self.total_received_spin.value() != quantity:
             self.total_received_spin.setValue(quantity)
+
+    def sync_quantity_field_from_total_spin(self, quantity):
+        if not hasattr(self, "entries") or not self.entries.get("quant"):
+            return
+        try:
+            current_quantity = parse_quantity(self.entries["quant"].text(), "Quantidade")
+        except ValueError:
+            current_quantity = None
+        if current_quantity != quantity:
+            self.entries["quant"].setText(str(quantity))
 
     def update_pallet_rows(self):
         if not hasattr(self, "pallets_table"):
@@ -1814,20 +1892,40 @@ class AlmoxarifadoWindow(QMainWindow):
     def pallet_quantity_changed(self, item):
         if item.column() != 1:
             return
-        text = item.text().strip()
-        if not text:
-            return
-        digits = "".join(char for char in text if char.isdigit())
-        if digits != text:
-            self.pallets_table.blockSignals(True)
-            item.setText(digits)
-            self.pallets_table.blockSignals(False)
+        item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
 
     def divide_pallet_quantities(self):
-        total_qty = self.total_received_spin.value()
         total_pallets = self.copies_spin.value()
         if total_pallets <= 1:
             return
+        try:
+            total_qty = parse_quantity(self.entries["quant"].text(), "Quantidade total")
+        except ValueError as exc:
+            QMessageBox.warning(self, "Divisão de quantidades", str(exc))
+            return
+        if total_qty <= 0:
+            QMessageBox.warning(
+                self,
+                "Divisão de quantidades",
+                "Informe uma quantidade total maior que zero.",
+            )
+            return
+        if total_qty > MAX_QUANTITY:
+            QMessageBox.warning(
+                self,
+                "Divisão de quantidades",
+                f"A quantidade total não pode exceder {MAX_QUANTITY}.",
+            )
+            return
+        if total_qty < total_pallets:
+            QMessageBox.warning(
+                self,
+                "Divisão de quantidades",
+                "A quantidade total deve ter pelo menos uma unidade para cada pallet.",
+            )
+            return
+        if self.total_received_spin.value() != total_qty:
+            self.total_received_spin.setValue(total_qty)
         base = total_qty // total_pallets
         remainder = total_qty % total_pallets
         self.pallets_table.blockSignals(True)
@@ -1846,8 +1944,16 @@ class AlmoxarifadoWindow(QMainWindow):
     def pallet_payloads(self, base_payload, copies):
         if copies <= 1:
             return base_payload
+        total_quantity = parse_quantity(base_payload.get("quant"), "Quantidade total")
+        if total_quantity <= 0:
+            raise ValueError("A quantidade total deve ser maior que zero para dividir entre pallets.")
+        if total_quantity > MAX_QUANTITY:
+            raise ValueError(f"A quantidade total não pode exceder {MAX_QUANTITY}.")
+        if self.pallets_table.rowCount() != copies:
+            raise ValueError("A quantidade de linhas de pallets não corresponde ao número de etiquetas.")
         payloads = []
         missing_rows = []
+        pallet_total = 0
         for row in range(self.pallets_table.rowCount()):
             pallet_item = self.pallets_table.item(row, 0)
             qty_item = self.pallets_table.item(row, 1)
@@ -1856,12 +1962,21 @@ class AlmoxarifadoWindow(QMainWindow):
             if not quantity:
                 missing_rows.append(pallet_id)
                 continue
+            pallet_quantity = parse_quantity(quantity, f"Quantidade do pallet {pallet_id}")
+            if pallet_quantity <= 0:
+                raise ValueError(f"O pallet {pallet_id} precisa ter pelo menos uma unidade.")
+            pallet_total += pallet_quantity
             payload = dict(base_payload)
-            payload["quant"] = quantity
+            payload["quant"] = str(pallet_quantity)
             payload["pallet"] = pallet_id
             payloads.append(payload)
         if missing_rows:
             raise ValueError("Informe a quantidade dos pallets: " + ", ".join(missing_rows))
+        if pallet_total != total_quantity:
+            raise ValueError(
+                f"A soma das quantidades dos pallets ({pallet_total}) deve ser igual "
+                f"à quantidade total informada ({total_quantity})."
+            )
         return payloads
 
     def build_payload(self):
@@ -1888,11 +2003,31 @@ class AlmoxarifadoWindow(QMainWindow):
             "label_profile": model["label_profile"],
             "layout_mode": layout_mode,
         }
+        copies = self.copies_spin.value()
+        pallet_text = payload["pallet"]
+        if pallet_text:
+            pallet_count = parse_quantity(pallet_text, "Pallet")
+            if pallet_count <= 0:
+                raise ValueError("A quantidade de pallets deve ser maior que zero.")
+            if pallet_count > MAX_LABEL_COPIES:
+                raise ValueError(f"O limite é de {MAX_LABEL_COPIES} pallets por geração.")
+            if pallet_count != copies:
+                raise ValueError(
+                    f"O campo Pallet informa {pallet_count}, mas a quantidade de etiquetas "
+                    f"está em {copies}. Ajuste um dos valores."
+                )
+        if payload["quant"]:
+            total_quantity = parse_quantity(payload["quant"], "Quantidade")
+            if total_quantity > MAX_QUANTITY:
+                raise ValueError(f"A quantidade não pode exceder {MAX_QUANTITY}.")
+            if copies > 1 and total_quantity <= 0:
+                raise ValueError("A quantidade total deve ser maior que zero para dividir entre pallets.")
+        elif copies > 1:
+            raise ValueError("Informe a quantidade total para dividir entre os pallets.")
         if not payload["material_desc"] and payload["material"]:
             payload["material_desc"] = lookup_material(self.db_path, payload["material"])
         if not payload["fornecedor_nome"] and payload["fornecedor"]:
             payload["fornecedor_nome"] = lookup_supplier(self.db_path, payload["fornecedor"])
-        copies = self.copies_spin.value()
         payload = self.pallet_payloads(payload, copies)
         return payload, copies, layout_mode
 
@@ -2132,7 +2267,7 @@ class AlmoxarifadoWindow(QMainWindow):
         filename, _ = QFileDialog.getOpenFileName(
             self,
             "Importar tabela",
-            str(APP_ROOT),
+            str(APP_DATA_DIR),
             "Planilhas (*.csv *.ods *.xlsx *.xlsm);;CSV (*.csv);;LibreOffice Calc (*.ods);;Excel (*.xlsx *.xlsm)",
         )
         if not filename:

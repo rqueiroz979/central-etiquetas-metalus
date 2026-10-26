@@ -25,11 +25,12 @@ if errorlevel 1 exit /b 1
 %BUILD_PYTHON% -m pip install -r requirements-build.txt
 if errorlevel 1 exit /b 1
 
-if not exist "build\package-data" mkdir "build\package-data"
-%BUILD_PYTHON% -c "from pathlib import Path; import shutil; files=list(Path('.').glob('*.ods')); assert len(files) == 1, files; shutil.copy2(files[0], Path('build/package-data/template.ods'))"
+%BUILD_PYTHON% -m PyInstaller --clean --noconfirm --onedir --windowed --name ALMOXARIFADO --distpath dist\windows --workpath build\windows-work --specpath build\windows-spec --paths "%CD%\ALMOXARIFADO_OFFLINE" --collect-all reportlab --hidden-import PySide6.QtPdf --hidden-import PySide6.QtPdfWidgets --hidden-import PySide6.QtPrintSupport --add-data "%CD%\ALMOXARIFADO_OFFLINE\static;static" --add-data "%CD%\ALMOXARIFADO_OFFLINE\config.json;." "%CD%\ALMOXARIFADO_OFFLINE\qt_app.py"
 if errorlevel 1 exit /b 1
 
-%BUILD_PYTHON% -m PyInstaller --clean --noconfirm --onefile --name CentralEtiquetasMetalus --distpath dist\windows --workpath build\windows-work --specpath build\windows-spec --collect-all reportlab --collect-all ezodf --collect-all lxml --add-data "%CD%\templates;templates" --add-data "%CD%\static;static" --add-data "%CD%\config.json;." --add-data "%CD%\build\package-data\template.ods;." app.py
+copy /Y "ALMOXARIFADO_OFFLINE\INICIAR_ALMOXARIFADO_PORTATIL.bat" "dist\windows\ALMOXARIFADO\INICIAR_ALMOXARIFADO.bat" >nul
 if errorlevel 1 exit /b 1
 
-echo Executable created at dist\windows\CentralEtiquetasMetalus.exe
+type nul > "dist\windows\ALMOXARIFADO\portable.flag"
+
+echo Windows package created at dist\windows\ALMOXARIFADO

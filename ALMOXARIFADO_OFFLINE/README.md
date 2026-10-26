@@ -1,60 +1,25 @@
-﻿# ALMOXARIFADO OFFLINE
+# ALMOXARIFADO Desktop
 
-Aplicativo desktop local para gerar etiquetas do almoxarifado.
+Esta é a versão desktop Qt usada como base para os pacotes finais de Windows e Zorin OS. Ela abre em janela própria, sem navegador.
 
-## Manual de uso
+## Executar a partir do código-fonte
 
-As instruções para os usuários estão em:
+No Windows, use `INICIAR_APP_OFFLINE.bat`. No Linux, instale as dependências e execute:
 
-```bat
-MANUAL_DE_USO.md
+```bash
+python3 -m pip install -r requirements.txt
+python3 qt_app.py
 ```
 
-Versão em PDF com imagens:
+## Pacotes finais
 
-```bat
-MANUAL_DE_USO_ALMOXARIFADO.pdf
-```
+Os pacotes são gerados pelos scripts na raiz do repositório:
 
-## Dados gravados
+- Windows: `build_windows.bat` e Inno Setup com `windows_installer.iss`;
+- Zorin OS / Ubuntu: `bash build_linux.sh`.
 
-O sistema grava somente:
+No GitHub Actions, o workflow de build gera o instalador `Almoxarifado-Setup.exe` e o pacote `.deb`, ambos disponíveis nos artefatos da execução. A pasta `dist\windows\ALMOXARIFADO` também pode ser distribuída como versão portátil. Veja o [guia principal](../README.md) e o [guia de instalação Linux](../INSTALACAO_LINUX.md).
 
-- Produtos / materiais
-- Fornecedores
+## Dados
 
-As etiquetas geradas não ficam armazenadas. O PDF é criado em pasta temporária apenas para visualizar, imprimir ou salvar manualmente.
-
-## Execução local
-
-```bat
-INICIAR_ALMOXARIFADO.bat
-```
-
-## Pacote portátil para outro PC
-
-No PC de desenvolvimento, com as dependências já instaladas, execute:
-
-```bat
-CRIAR_PACOTE_PORTATIL.bat
-```
-
-Depois copie a pasta abaixo inteira para o outro computador:
-
-```bat
-dist\ALMOXARIFADO
-```
-
-No computador final, abra:
-
-```bat
-INICIAR_ALMOXARIFADO.bat
-```
-
-Esse formato não exige instalador nem Python instalado no computador final.
-
-## Arquivos importantes
-
-- Banco persistente: `data/etiquetas.db`
-- Logo: `static/logo-metalus.png`
-- Configuração: `config.json`
+No Windows portátil, o banco SQLite fica em `data/etiquetas.db` ao lado do executável. No Zorin, configuração e dados são armazenados em `$XDG_DATA_HOME/Almoxarifado` ou em `~/.local/share/Almoxarifado`.

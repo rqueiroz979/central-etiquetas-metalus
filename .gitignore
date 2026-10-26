@@ -20,6 +20,10 @@ ALMOXARIFADO_OFFLINE/dist/
 ALMOXARIFADO_OFFLINE/build/
 ALMOXARIFADO_OFFLINE/*.zip
 
+# Current Windows deployment package and its live database
+APP_ETIQUETAS_ALMOX/
+APP_ETIQUETAS_ALMOX.rar
+
 # Temporary extraction and test artifacts
 ods_unzipped/
 test_artifacts/

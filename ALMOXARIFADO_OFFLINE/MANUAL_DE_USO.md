@@ -95,7 +95,9 @@ Use este fluxo quando o mesmo produto chegar em mais de um pallet.
 7. Confira as quantidades.
 8. Clique em `Gerar Etiqueta`.
 
-O sistema gera um PDF com uma etiqueta para cada pallet, em ordem.
+O sistema gera um PDF com uma etiqueta para cada pallet, em ordem. A soma das quantidades dos pallets deve ser igual à quantidade total, e cada pallet precisa ter ao menos uma unidade. Ao apagar `Pallet` ou informar `1`, a geração volta para uma etiqueta.
+
+As quantidades devem ser inteiras. O ponto pode ser usado como separador de milhares (`1.000` equivale a mil); valores decimais, negativos ou com separador de vírgula não são aceitos. Na divisão automática, a diferença do resto é distribuída começando pelo primeiro pallet.
 
 Exemplo:
 

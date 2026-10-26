@@ -1,2 +1,2 @@
--r requirements.txt
+-r ALMOXARIFADO_OFFLINE/requirements.txt
 pyinstaller>=6.0,<7.0

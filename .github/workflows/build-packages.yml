@@ -20,15 +20,44 @@ jobs:
         with:
           python-version: "3.10"
 
-      - name: Build Windows executable
+      - name: Build Windows desktop package
         shell: cmd
         run: build_windows.bat
 
-      - name: Upload Windows executable
+      - name: Install Inno Setup
+        run: choco install innosetup --no-progress --yes
+
+      - name: Create Windows installer
+        shell: pwsh
+        run: '& "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" windows_installer.iss'
+
+      - name: Install and smoke-test Windows installer
+        shell: pwsh
+        run: |
+          $installer = Resolve-Path "dist\windows\Almoxarifado-Setup.exe"
+          $install = Start-Process -FilePath $installer.Path -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/SP-", "/CURRENTUSER" -Wait -PassThru
+          if ($install.ExitCode -ne 0) { throw "Installer exited with code $($install.ExitCode)." }
+          $appDir = Join-Path $env:LOCALAPPDATA "Programs\Almoxarifado"
+          $appExe = Join-Path $appDir "ALMOXARIFADO.exe"
+          if (-not (Test-Path $appExe)) { throw "Installed application was not found." }
+          if (Test-Path (Join-Path $appDir "portable.flag")) { throw "Portable marker was incorrectly installed." }
+          $env:QT_QPA_PLATFORM = "offscreen"
+          $process = Start-Process -FilePath $appExe -PassThru
+          Start-Sleep -Seconds 8
+          $process.Refresh()
+          if ($process.HasExited) { throw "Installed app exited with code $($process.ExitCode)." }
+          Stop-Process -Id $process.Id
+          $userData = Join-Path $env:LOCALAPPDATA "Almoxarifado"
+          if (-not (Test-Path (Join-Path $userData "data\etiquetas.db"))) { throw "The app did not create its per-user database." }
+          $uninstaller = Join-Path $appDir "unins000.exe"
+          $uninstall = Start-Process -FilePath $uninstaller -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART" -Wait -PassThru
+          if ($uninstall.ExitCode -ne 0) { throw "Uninstaller exited with code $($uninstall.ExitCode)." }
+
+      - name: Upload Windows installer
         uses: actions/upload-artifact@v4
         with:
-          name: CentralEtiquetasMetalus-Windows
-          path: dist/windows/CentralEtiquetasMetalus.exe
+          name: Almoxarifado-Windows
+          path: dist/windows/Almoxarifado-Setup.exe
 
   build-linux:
     runs-on: ubuntu-22.04
@@ -49,8 +78,19 @@ jobs:
       - name: Build Debian package
         run: bash build_linux.sh
 
+      - name: Install package dependencies and smoke-test the desktop app
+        run: |
+          sudo apt-get install -y ./dist/linux/almoxarifado-metalus_1.0.0_*.deb
+          set +e
+          XDG_DATA_HOME="$RUNNER_TEMP/almoxarifado-test-data" QT_QPA_PLATFORM=offscreen timeout 15s almoxarifado
+          status=$?
+          if [ "$status" -ne 124 ]; then
+            exit "$status"
+          fi
+          test -s "$RUNNER_TEMP/almoxarifado-test-data/Almoxarifado/data/etiquetas.db"
+
       - name: Upload Debian package
         uses: actions/upload-artifact@v4
         with:
-          name: CentralEtiquetasMetalus-Zorin-Linux
+          name: Almoxarifado-Zorin-Linux
           path: dist/linux/*.deb
