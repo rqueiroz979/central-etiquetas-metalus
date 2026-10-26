@@ -94,9 +94,13 @@ jobs:
           db_path="$RUNNER_TEMP/almoxarifado-test-data/Almoxarifado/data/etiquetas.db"
           test -s "$db_path"
           python3 -c 'import sqlite3,sys; c=sqlite3.connect(sys.argv[1]); counts=tuple(c.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0] for table in ("materials","suppliers")); c.close(); print(f"Seeded records: {counts}"); sys.exit(0 if counts == (4501, 52) else 1)' "$db_path"
-          shared_tmp="$(mktemp -d "$RUNNER_TEMP/almoxarifado-shared-tmp.XXXXXX")"
-          second_home="$(mktemp -d "$RUNNER_TEMP/almoxarifado-second-user.XXXXXX")"
-          trap 'rm -rf "$shared_tmp" "$second_home"' EXIT
+          multiuser_root="$(mktemp -d /tmp/almoxarifado-multiuser.XXXXXX)"
+          shared_tmp="$multiuser_root/tmp"
+          second_home="$multiuser_root/home"
+          trap 'sudo rm -rf "$multiuser_root"' EXIT
+          chmod 755 "$multiuser_root"
+          mkdir "$shared_tmp" "$second_home"
+          chmod 777 "$second_home"
           chmod 1777 "$shared_tmp"
           mkdir "$shared_tmp/almoxarifado_offline"
           chmod 755 "$shared_tmp/almoxarifado_offline"
