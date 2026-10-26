@@ -37,7 +37,7 @@ sudo apt install -y python3 python3-venv python3-pip dpkg-dev
 bash build_linux.sh
 ```
 
-O pacote será criado em `dist/linux/`. Instale-o pelo gerenciador de aplicativos ou pelo terminal:
+O pacote será criado em `dist/linux/`. Instale-o pelo terminal com APT, que também resolve as dependências:
 
 ```bash
 sudo apt install ./dist/linux/almoxarifado-metalus_1.0.0_*.deb
@@ -57,7 +57,7 @@ python ALMOXARIFADO_OFFLINE/qt_app.py
 ## Dados e compatibilidade de tela
 
 - No Windows portátil, configuração e banco ficam junto ao executável: `config.json` e `data\etiquetas.db`.
-- No Zorin, os dados ficam em `$XDG_DATA_HOME/Almoxarifado` ou, se a variável não estiver definida, em `~/.local/share/Almoxarifado`. Assim, a instalação em `/opt` não precisa de permissão de escrita.
+- No Zorin, o aplicativo é instalado para todos os usuários. Cada conta mantém seus dados em `$XDG_DATA_HOME/Almoxarifado` ou, se a variável não estiver definida, em `~/.local/share/Almoxarifado`; os arquivos temporários também são privados por execução.
 - O primeiro início já carrega os cadastros iniciais da versão Windows: 4.501 materiais e 52 fornecedores. Cada instalação mantém seu próprio banco; os cadastros existentes no computador são preservados e não são sincronizados entre Windows e Linux. Para atualizar os dados, use **Cadastros → Importar tabela** (CSV, ODS, XLSX ou XLSM).
 - A janela inicial considera a área de tela disponível; em larguras menores, os painéis passam de lado a lado para uma disposição vertical. As páginas também permitem rolagem para acessar o conteúdo em telas com pouca altura.
 

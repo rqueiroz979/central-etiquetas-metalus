@@ -74,7 +74,7 @@ else:
 CONFIG_PATH = APP_DATA_DIR / "config.json"
 DEFAULT_CONFIG_PATH = RESOURCE_ROOT / "config.json"
 DEFAULT_DB_PATH = APP_DATA_DIR / "data" / "etiquetas.db"
-SESSION_OUTPUT_DIR = Path(tempfile.gettempdir()) / "almoxarifado_offline" / str(os.getpid())
+SESSION_OUTPUT_DIR = Path(tempfile.mkdtemp(prefix="almoxarifado_offline-"))
 
 
 def cleanup_session_output():
@@ -1131,7 +1131,6 @@ class AlmoxarifadoWindow(QMainWindow):
             self.logo_path = APP_ROOT / "static" / "LOGO METALUS.png"
         if not self.logo_path.exists():
             self.logo_path = RESOURCE_ROOT / "static" / "LOGO METALUS.png"
-        cleanup_session_output()
         self.output_dir.mkdir(parents=True, exist_ok=True)
         init_db(self.db_path)
         seed_lookup_data(self.db_path, RESOURCE_ROOT / "seed" / "lookups.db")

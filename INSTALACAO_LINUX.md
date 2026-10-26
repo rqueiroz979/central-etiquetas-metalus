@@ -16,10 +16,16 @@ O primeiro build precisa de internet para baixar as dependências de empacotamen
 
 ## Instalar e abrir
 
-Instale pelo gerenciador de aplicativos ou pelo terminal:
+Se baixou o artefato **Almoxarifado-Zorin-Linux** pelo GitHub, primeiro extraia o ZIP. No Zorin, o gerenciador gráfico pode mostrar “tipo de arquivo não suportado” ao abrir diretamente um `.deb`; nesse caso, instale pelo terminal para que o APT reconheça o pacote local e resolva as dependências:
 
 ```bash
-sudo apt install ./dist/linux/almoxarifado-metalus_1.0.0_*.deb
+sudo apt install "/caminho/para/almoxarifado-metalus_1.0.0_amd64.deb"
+```
+
+Substitua o caminho de exemplo pelo caminho do arquivo extraído. Se o terminal estiver aberto na pasta do `.deb`, também pode usar:
+
+```bash
+sudo apt install ./almoxarifado-metalus_1.0.0_amd64.deb
 ```
 
 Abra **Almoxarifado** pelo menu de aplicativos. O pacote declara as bibliotecas nativas usadas pelo Qt e pelo PDF; o APT instala automaticamente as que ainda faltam durante a instalação. O computador precisa de internet nessa etapa se precisar baixar dependências. Python e pasta-fonte não são necessários.
@@ -40,6 +46,8 @@ O banco SQLite e a configuração ficam separados dos binários instalados:
 - `~/.local/share/Almoxarifado`, caso contrário.
 
 Inclua essa pasta nos backups para preservar os cadastros.
+
+O aplicativo e o atalho do menu são instalados para todos os usuários do computador. Cada conta Linux mantém seus próprios cadastros na pasta de dados acima. Os PDFs temporários também usam uma pasta privada por execução, então uma conta não precisa de permissão sobre os arquivos temporários de outra.
 
 ## Problemas comuns
 
