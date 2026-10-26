@@ -104,7 +104,6 @@ jobs:
           chmod 1777 "$shared_tmp"
           mkdir "$shared_tmp/almoxarifado_offline"
           chmod 755 "$shared_tmp/almoxarifado_offline"
-          chmod 755 "$second_home"
           sudo -u nobody mkdir -p "$second_home/.local/share"
           set +e
           timeout 15s sudo -u nobody env HOME="$second_home" XDG_DATA_HOME="$second_home/.local/share" TMPDIR="$shared_tmp" QT_QPA_PLATFORM=offscreen almoxarifado
