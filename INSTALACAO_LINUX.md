@@ -47,7 +47,7 @@ O banco SQLite e a configuração ficam separados dos binários instalados:
 
 Inclua essa pasta nos backups para preservar os cadastros.
 
-O aplicativo e o atalho do menu são instalados para todos os usuários do computador. Cada conta Linux mantém seus próprios cadastros na pasta de dados acima. Os PDFs temporários também usam uma pasta privada por execução, então uma conta não precisa de permissão sobre os arquivos temporários de outra.
+O aplicativo e o atalho do menu são instalados para todos os usuários do computador. Cada conta Linux mantém seus próprios cadastros na pasta de dados acima; os bancos não são compartilhados entre contas. Os PDFs temporários também usam uma pasta privada por execução, então uma conta não precisa de permissão sobre os arquivos temporários de outra. O workflow do GitHub testa a inicialização do pacote também com uma segunda conta Linux antes de disponibilizar o instalador.
 
 ## Problemas comuns
 

@@ -9,7 +9,13 @@ O código-fonte principal dessa versão fica em `ALMOXARIFADO_OFFLINE/`:
 - `pdf_label.py`: geração dos PDFs;
 - `static/`: ícones e logotipo.
 
-O antigo aplicativo web Flask (`app.py`) permanece no repositório, mas não é usado pelos pacotes finais nem pelo iniciador principal.
+O [manual de uso ilustrado](ALMOXARIFADO_OFFLINE/MANUAL_DE_USO.md) explica a geração de etiquetas, a divisão de quantidades por pallet, o visualizador de PDF e os cadastros. A versão em PDF está disponível em [MANUAL_DE_USO_ALMOXARIFADO.pdf](ALMOXARIFADO_OFFLINE/MANUAL_DE_USO_ALMOXARIFADO.pdf).
+
+## Arquivos gerados e dados locais
+
+As pastas `.venv/`, `.build-windows/`, `.build-linux/`, `build/` (inclusive `ALMOXARIFADO_OFFLINE/build/`) e `__pycache__/` contêm ambientes ou arquivos temporários de desenvolvimento/build. Podem ser removidas; os ambientes e arquivos de build são recriados quando necessários.
+
+As pastas locais `dist/`, `data/`, `output/`, `APP_ETIQUETAS_ALMOX/` e o arquivo `APP_ETIQUETAS_ALMOX.rar` não são incluídos no Git: podem conter instaladores, bancos de dados, PDFs ou a versão Windows de referência. Preserve os dados que precisar; se houver arquivos de backup, confira o conteúdo antes de removê-los.
 
 ## Usar no Windows
 
@@ -68,4 +74,4 @@ O workflow `.github/workflows/build-packages.yml` roda em push para `main` e tam
 - `Almoxarifado-Setup.exe` para Windows;
 - `almoxarifado-metalus_1.0.0_amd64.deb` para Zorin OS/Ubuntu amd64.
 
-Baixe os instaladores na seção **Artifacts** da execução do workflow. O job Linux instala o `.deb` com APT e inicia o aplicativo em modo de teste antes de publicar o artefato. A instalação do `.deb` instala automaticamente as bibliotecas nativas listadas como dependências; o usuário não precisa instalar Python nem pacotes manualmente.
+Baixe os instaladores na seção **Artifacts** da execução do workflow. O job Linux instala o `.deb` com APT e testa a inicialização e o banco de dados tanto na conta principal quanto em uma segunda conta Linux, antes de publicar o artefato. A instalação do `.deb` instala automaticamente as bibliotecas nativas listadas como dependências; o usuário não precisa instalar Python nem pacotes manualmente.

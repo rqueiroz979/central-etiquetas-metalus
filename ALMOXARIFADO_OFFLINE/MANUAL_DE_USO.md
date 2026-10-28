@@ -1,240 +1,195 @@
-﻿# Manual de Uso - Almoxarifado Offline
+# Manual de uso — Almoxarifado Metalus
 
-Este documento explica como usar o sistema para cadastrar materiais e fornecedores, gerar etiquetas, visualizar PDFs e imprimir.
+Este manual explica como abrir o aplicativo desktop, preencher e gerar etiquetas, consultar cadastros, importar planilhas e guardar os arquivos gerados. O programa funciona em uma janela própria no Windows e no Zorin OS.
 
-As imagens abaixo são exemplos visuais do próprio sistema.
+As imagens mostram a interface do aplicativo. Os dados preenchidos nelas são exemplos.
 
-## 1. Abrir o sistema
+## 1. Abrir o aplicativo
 
-No computador onde o sistema estiver copiado, abra a pasta do aplicativo e execute:
+### Windows instalado
 
-```bat
-INICIAR_ALMOXARIFADO.bat
+Abra **Almoxarifado** pelo menu Iniciar ou pelo atalho criado durante a instalação. O instalador já inclui os componentes necessários; não é preciso instalar Python.
+
+### Windows portátil
+
+Extraia a pasta portátil inteira e execute `INICIAR_ALMOXARIFADO.bat`. Não execute o programa de dentro do arquivo ZIP nem copie apenas o executável.
+
+### Zorin OS
+
+Instale o arquivo `.deb` com o APT e abra **Almoxarifado** pelo menu de aplicativos. Também é possível iniciar pelo terminal com:
+
+```bash
+almoxarifado
 ```
 
-O sistema é portátil. Ele não precisa de instalador, Python ou internet para funcionar.
+O pacote pode ser instalado para todas as contas do computador. Cada usuário mantém seus próprios cadastros.
 
-## 2. O que o sistema guarda
+## 2. Como os dados são guardados
 
-O sistema salva somente:
+O banco local guarda os cadastros de materiais/produtos e fornecedores. O instalador já traz uma lista inicial para facilitar o preenchimento.
 
-- Materiais / produtos
-- Fornecedores
+As etiquetas geradas são arquivos PDF temporários. Para guardar uma etiqueta, clique em **Salvar** no visualizador e escolha onde gravar o PDF.
 
-As etiquetas geradas não ficam armazenadas automaticamente. O PDF é criado em uma pasta temporária para visualizar, imprimir ou salvar manualmente.
+Os cadastros são locais: contas diferentes e instalações diferentes não sincronizam alterações automaticamente. A importação de uma planilha atualiza, no banco da conta atual, os registros que tenham o mesmo código.
 
-## 3. Tela principal
+## 3. Tela de geração de etiquetas
 
-Na tela principal ficam os campos usados para gerar a etiqueta.
+![Tela de geração de etiquetas](docs/imagens/01_tela_principal.png)
 
-![Tela principal do sistema](docs/imagens/01_tela_principal.png)
+Na parte superior, informe os dados da etiqueta:
 
-Campos principais:
+- **Tipo de etiqueta**: Matéria-Prima, Matéria-Prima Usinados ou Bens de Consumo.
+- **Código do Produto**: código do material; use **Selecionar** para pesquisar no cadastro.
+- **Data** e **Nº Lote**: informações do recebimento.
+- **Descrição do material**: pode ser preenchida automaticamente ao informar ou selecionar um código cadastrado.
+- **Insp.**, **Ref.**, **Dimensão 1** e **Dimensão 2**: informações técnicas que devem sair na etiqueta.
+- **Fornecedor (código)**: código do fornecedor; use **Selecionar** para pesquisar.
+- **Nome do fornecedor**: pode ser preenchido automaticamente quando o fornecedor está cadastrado.
+- **PDC**, **Quant.**, **NF**, **O.S.** e **Pallet**: dados complementares.
 
-- `Tipo de etiqueta`: escolha entre `Matéria-Prima`, `Matéria-Prima Usinados` e `Bens de Consumo`.
-- `Código do Produto`: informe ou selecione o código do material.
-- `Data`: data que sairá na etiqueta.
-- `Nº Lote`: número do lote recebido.
-- `Descrição do material`: preenchida automaticamente quando o produto está cadastrado.
-- `Insp.`, `Ref.`, `Dimensão 1` e `Dimensão 2`: dados técnicos da etiqueta.
-- `Fornecedor (código)`: informe ou selecione o fornecedor.
-- `Nome do fornecedor`: preenchido automaticamente quando o fornecedor está cadastrado.
-- `PDC`, `Quant.`, `NF`, `O.S.` e `Pallet`: dados complementares da etiqueta.
+O campo **Código do Produto** é obrigatório. Os demais dados devem ser preenchidos conforme a etiqueta e o processo da empresa. Pressionar **Enter** em um campo avança para o próximo.
 
-Ao preencher um campo e pressionar `Enter`, o cursor passa para o próximo campo.
+## 4. Pesquisar materiais e fornecedores
 
-## 4. Selecionar produto ou fornecedor
+1. Clique em **Selecionar** ao lado do código do produto ou do fornecedor.
+2. Na janela de pesquisa, digite parte do código ou da descrição/nome e clique em **Buscar**.
+3. Use **Anterior** e **Próxima** para percorrer os resultados, se necessário.
+4. Selecione o registro desejado.
 
-Para buscar um produto:
+Quando o código está cadastrado, a descrição do material ou o nome do fornecedor é preenchido automaticamente.
 
-1. Clique em `Selecionar` ao lado do campo `Código do Produto`.
-2. Pesquise pelo código ou descrição.
-3. Selecione o item desejado.
+## 5. Gerar uma etiqueta
 
-Para buscar um fornecedor:
+1. Escolha o **Tipo de etiqueta**.
+2. Preencha o código do produto e os dados que devem constar na etiqueta.
+3. Para uma etiqueta simples, deixe **Quantidade de etiquetas** em `1` e informe **Pallet** como `1` ou deixe-o vazio.
+4. Escolha o **Formato de impressão**.
+5. Clique em **Gerar Etiqueta**.
+6. Confira o PDF no visualizador integrado.
+7. Clique em **Imprimir** para enviar à impressora ou em **Salvar** para guardar uma cópia.
 
-1. Clique em `Selecionar` ao lado do campo `Fornecedor (código)`.
-2. Pesquise pelo código ou nome.
-3. Selecione o item desejado.
+## 6. Dividir uma quantidade entre pallets
 
-## 5. Gerar uma etiqueta simples
+Use este recurso quando a quantidade total do material estiver distribuída em mais de um pallet.
 
-Use este fluxo quando for apenas uma etiqueta.
+![Exemplo de divisão automática entre pallets](docs/imagens/05_pallets.png)
 
-1. Escolha o `Tipo de etiqueta`.
-2. Preencha os dados da tela principal.
-3. Em `Quantidade de etiquetas`, deixe `1`.
-4. Escolha o `Formato de impressão`.
-5. Clique em `Gerar Etiqueta`.
-6. O PDF será exibido no visualizador.
-7. Confira a etiqueta.
-8. Clique em `Imprimir` ou `Salvar`.
+1. Informe a quantidade total em **Quant.**.
+2. Informe o número de pallets em **Pallet**. O campo **Quantidade de etiquetas** acompanha esse número.
+3. A tabela **Pallets recebidos** aparece. Confira o total em **Qtd. total**.
+4. Para dividir igualmente, clique em **Dividir auto.**. Você também pode preencher ou ajustar cada quantidade na tabela.
+5. Confira a soma e clique em **Gerar Etiqueta**.
 
-## 6. Gerar etiquetas para vários pallets
+Cada linha da tabela corresponde a um pallet e resulta em uma etiqueta identificada, por exemplo, como `1/3`, `2/3` e `3/3`. A soma das quantidades da tabela precisa ser igual à quantidade total; cada pallet precisa ter pelo menos uma unidade.
 
-Use este fluxo quando o mesmo produto chegar em mais de um pallet.
+Na divisão automática, a sobra da divisão é distribuída começando pelos primeiros pallets. Por exemplo, `10` unidades em `3` pallets resulta em `4`, `3` e `3`.
 
-![Tabela de pallets preenchida](docs/imagens/01_tela_principal.png)
-
-1. Preencha os dados do produto normalmente.
-2. Em `Dados Complementares`, preencha:
-   - `Quant.` com a quantidade total recebida.
-   - `Pallet` com a quantidade de pallets recebidos.
-3. Ao informar um pallet maior que `1`, o sistema abre a tabela `Pallets recebidos`.
-4. A coluna `Pallet` será preenchida automaticamente:
-
-```text
-1/4
-2/4
-3/4
-4/4
-```
-
-5. Preencha a quantidade de cada pallet.
-6. Se quiser dividir automaticamente, clique em `Dividir auto.`.
-7. Confira as quantidades.
-8. Clique em `Gerar Etiqueta`.
-
-O sistema gera um PDF com uma etiqueta para cada pallet, em ordem. A soma das quantidades dos pallets deve ser igual à quantidade total, e cada pallet precisa ter ao menos uma unidade. Ao apagar `Pallet` ou informar `1`, a geração volta para uma etiqueta.
-
-As quantidades devem ser inteiras. O ponto pode ser usado como separador de milhares (`1.000` equivale a mil); valores decimais, negativos ou com separador de vírgula não são aceitos. Na divisão automática, a diferença do resto é distribuída começando pelo primeiro pallet.
-
-Exemplo:
-
-```text
-Quantidade total: 136
-Pallets: 4
-
-1/4 - 34
-2/4 - 34
-3/4 - 34
-4/4 - 34
-```
+As quantidades precisam ser números inteiros positivos. É permitido usar ponto como separador de milhares (`1.000` significa mil); decimais, valores negativos e vírgula como separador não são aceitos.
 
 ## 7. Formatos de impressão
 
 Os formatos disponíveis são:
 
-- `A4 - 8 etiquetas (90 x 60 mm)`
-- `Etiqueta 100 x 70 mm`
+- **A4 - 8 etiquetas (90 x 60 mm)**: folha A4 com até oito etiquetas por página.
+- **Etiqueta 100 x 70 mm**: página individual para impressão em etiqueta desse formato.
 
-Os mesmos formatos são usados para `Matéria-Prima`, `Matéria-Prima Usinados` e `Bens de Consumo`.
+As opções estão disponíveis para os três tipos de etiqueta. Confirme se o papel e a escala selecionados nas configurações da impressora correspondem ao formato escolhido.
 
-## 8. Visualizador de PDF
+## 8. Visualizar, imprimir e salvar o PDF
 
-Depois de gerar a etiqueta, o PDF aparece no visualizador da própria tela.
+![Etiqueta no visualizador de PDF integrado](docs/imagens/02_visualizador_pdf.png)
 
-![Visualizador de PDF integrado](docs/imagens/02_visualizador_pdf.png)
+O PDF é exibido na própria tela do aplicativo. Os controles são:
 
-Botões do visualizador:
+- **-** e **+**: diminuir ou aumentar o zoom.
+- **Ajustar**: ajustar a visualização à largura disponível.
+- **Imprimir**: abrir as opções de impressão do sistema.
+- **Salvar**: escolher a pasta e o nome do arquivo PDF.
+- **Externo**: abrir o PDF no leitor padrão do computador.
+- **Fechar**: ocultar o visualizador e voltar ao formulário.
 
-- `-`: diminuir zoom.
-- `+`: aumentar zoom.
-- `Ajustar`: ajustar o PDF à largura do visualizador.
-- `Imprimir`: enviar o PDF para a impressora.
-- `Salvar`: salvar uma cópia do PDF em uma pasta escolhida.
-- `Externo`: abrir o PDF no leitor padrão do Windows.
-- `Fechar`: fechar o visualizador.
+## 9. Abrir o último PDF
 
-## 9. Abrir último PDF
+**Abrir último PDF** reabre o arquivo gerado mais recentemente durante a sessão atual. Se ainda não houver etiqueta gerada nessa sessão, o aplicativo avisará que é preciso gerar uma primeiro.
 
-O botão `Abrir último PDF` reabre o último PDF gerado durante a sessão atual do sistema.
+Os PDFs temporários podem ser removidos quando o aplicativo é fechado. Use **Salvar** para manter uma cópia.
 
-Observação: como o sistema não armazena etiquetas automaticamente, ao fechar o sistema o PDF temporário pode ser apagado. Para guardar uma etiqueta, use o botão `Salvar`.
+## 10. Começar uma nova etiqueta
 
-## 10. Atualizar / nova etiqueta
+Clique em **Atualizar** no cabeçalho do formulário. O aplicativo limpa os campos, fecha a visualização atual e volta para os valores iniciais, incluindo a data atual.
 
-Na tela principal, o botão `Atualizar` limpa os campos para começar uma nova etiqueta.
+## 11. Tela de cadastros
 
-Ele também:
+Clique no cartão **Cadastros** no cabeçalho. A tela contém as áreas de importação, edição e pesquisa:
 
-- Fecha o visualizador de PDF.
-- Volta `Quantidade de etiquetas` para `1`.
-- Limpa a tabela de pallets.
-- Mantém a data atual preenchida.
+![Cadastro de materiais e fornecedores](docs/imagens/03_cadastros.png)
 
-## 11. Cadastros
+- Use **Materiais / Produtos** ou **Fornecedores** para alternar entre os cadastros.
+- O formulário à direita permite cadastrar ou atualizar um registro.
+- A lista abaixo permite pesquisar por código/descrição ou nome. Um duplo clique em uma linha carrega o registro no formulário de edição.
+- Clique em **Atualizar** para recarregar a lista; **← Almoxarifado** retorna à geração de etiquetas.
 
-Para acessar os cadastros, clique no card `Cadastros`.
+## 12. Importar uma planilha
 
-![Tela de cadastros](docs/imagens/03_cadastros.png)
+![Área de importação de planilha](docs/imagens/04_importacao.png)
 
-Nessa tela é possível:
+1. Abra **Cadastros**.
+2. Confirme que a planilha tem uma linha de cabeçalho com colunas de código e descrição/nome.
+3. Clique em **Importar tabela** e selecione o arquivo.
+4. Aguarde o processamento e confira o resultado exibido na tela.
 
-- Importar tabela de produtos e fornecedores.
-- Cadastrar ou atualizar materiais/produtos manualmente.
-- Cadastrar ou atualizar fornecedores manualmente.
-- Pesquisar itens cadastrados.
+São aceitos arquivos **CSV**, **ODS**, **XLSX** e **XLSM**. Para materiais, use colunas equivalentes a código do material/produto e descrição. Para fornecedores, use código do fornecedor e nome/razão social. Os nomes dos cabeçalhos podem variar, por exemplo: `codigo_material`, `codigo_produto`, `descricao_material`, `codigo_fornecedor` e `nome_fornecedor`.
 
-## 12. Importar tabela
+Registros com código já cadastrado são atualizados com os dados da planilha. Linhas sem dados reconhecidos de material ou fornecedor são ignoradas; a mensagem de conclusão informa os resultados.
 
-O sistema aceita arquivos:
+## 13. Cadastrar ou atualizar manualmente
 
-![Importação de tabela](docs/imagens/04_importacao.png)
+### Material ou produto
 
-- CSV
-- ODS
-- XLSX
-- XLSM
+1. Em **Cadastros**, selecione **Materiais / Produtos**.
+2. Informe **Código** e **Descrição**.
+3. Clique em **Salvar Material / Produto**.
 
-Para importar:
+### Fornecedor
 
-1. Acesse `Cadastros`.
-2. Clique em `Importar tabela`.
-3. Escolha o arquivo.
-4. Confira o nome do arquivo selecionado na tela.
-5. Aguarde a mensagem de conclusão.
+1. Em **Cadastros**, selecione **Fornecedores**.
+2. Informe **Código** e **Nome**.
+3. Clique em **Salvar Fornecedor**.
 
-Ao terminar, o sistema informa quantos materiais e fornecedores foram inseridos ou atualizados.
-O instalador já inclui os cadastros iniciais de materiais e fornecedores da versão Windows. Cada computador mantém seu próprio banco local; os registros já existentes são preservados, e novas alterações não são sincronizadas entre sistemas.
+O código identifica o registro. Se já existir, salvar novamente atualiza a descrição ou o nome.
 
-## 13. Cadastro manual
+## 14. Fazer backup dos cadastros
 
-Para cadastrar ou atualizar um material:
+Inclua o banco local nos backups para preservar os registros:
 
-1. Entre em `Cadastros`.
-2. Selecione a aba `Materiais / Produtos`.
-3. Preencha `Código`.
-4. Preencha `Descrição`.
-5. Clique em `Salvar Material / Produto`.
+- **Windows instalado**: `%LOCALAPPDATA%\Almoxarifado`.
+- **Windows portátil**: pasta `data` junto ao aplicativo.
+- **Zorin OS**: `$XDG_DATA_HOME/Almoxarifado`, se a variável estiver definida; caso contrário, `~/.local/share/Almoxarifado`.
 
-Para cadastrar ou atualizar um fornecedor:
-
-1. Entre em `Cadastros`.
-2. Selecione a aba `Fornecedores`.
-3. Preencha `Código`.
-4. Preencha `Nome`.
-5. Clique em `Salvar Fornecedor`.
-
-Se o código já existir, o sistema atualiza o cadastro.
-
-## 14. Cuidados importantes
-
-- Não apague a pasta `data`, pois nela fica o banco de produtos e fornecedores.
-- Para levar o sistema para outro computador, copie a pasta completa do aplicativo.
-- Não execute o sistema de dentro do arquivo `.zip`; primeiro extraia a pasta.
-- Para guardar uma etiqueta, use `Salvar` no visualizador de PDF.
-- Se a impressora não aparecer, confira se ela está instalada no Windows.
+No Zorin, o aplicativo fica disponível para as contas do computador, mas cada conta tem seu próprio banco. Para levar cadastros para outra conta ou computador, faça uma cópia de segurança ou use **Importar tabela**. Os cadastros de Windows e Linux não são sincronizados automaticamente.
 
 ## 15. Problemas comuns
 
-### O produto não preenche a descrição automaticamente
+### A descrição do material ou o nome do fornecedor não é preenchido
 
-Verifique se o produto está cadastrado em `Cadastros > Materiais / Produtos`.
+Verifique se o código está correto e se o registro existe na aba correspondente de **Cadastros**. Use **Atualizar** na tela de cadastros ou importe a planilha atualizada.
 
-### O fornecedor não preenche o nome automaticamente
+### A geração de etiquetas para pallets mostra um aviso
 
-Verifique se o fornecedor está cadastrado em `Cadastros > Fornecedores`.
+Confirme se há uma quantidade total válida, se todos os pallets têm quantidade maior que zero e se a soma da tabela é igual ao total informado.
 
-### O PDF não abriu no leitor externo
+### O PDF não aparece ou não abre externamente
 
-Use o visualizador interno do sistema ou instale um leitor de PDF padrão no Windows.
+Gere a etiqueta novamente. Se **Externo** não abrir o arquivo, confira se há um leitor de PDF padrão instalado. Também é possível imprimir ou salvar pelo visualizador integrado.
 
-### A impressão não saiu corretamente
+### A impressão saiu cortada ou em escala incorreta
 
-Confira:
+Confirme o formato escolhido, o papel carregado e a escala nas opções da impressora. Para preservar as dimensões, use tamanho real/100% quando essa opção estiver disponível.
 
-- Impressora selecionada.
-- Tamanho do papel.
-- Orientação da impressão.
-- Se a escala da impressora está em tamanho real ou 100%.
+### O aplicativo não abre em outra conta do Zorin
+
+Instale o pacote `.deb` atualizado pelo APT para que o programa e o atalho estejam disponíveis no computador. Cada conta usa seus próprios dados. Para ver uma mensagem de erro, abra um terminal nessa conta e execute `almoxarifado`.
+
+## 16. Ajustar a janela à tela
+
+O aplicativo funciona em janela própria. Redimensione a janela conforme necessário; em telas menores, role a página para acessar todos os campos e botões.
