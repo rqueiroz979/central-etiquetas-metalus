@@ -9,7 +9,7 @@ O código-fonte principal dessa versão fica em `ALMOXARIFADO_OFFLINE/`:
 - `pdf_label.py`: geração dos PDFs;
 - `static/`: ícones e logotipo.
 
-O [manual de uso ilustrado](ALMOXARIFADO_OFFLINE/MANUAL_DE_USO.md) explica a geração de etiquetas, a divisão de quantidades por pallet, o visualizador de PDF e os cadastros. A versão em PDF está disponível em [MANUAL_DE_USO_ALMOXARIFADO.pdf](ALMOXARIFADO_OFFLINE/MANUAL_DE_USO_ALMOXARIFADO.pdf).
+O [manual de uso ilustrado](ALMOXARIFADO_OFFLINE/MANUAL_DE_USO.md) explica a geração de etiquetas de produção, a criação avulsa e em lote de etiquetas de prateleira a partir de planilhas, a divisão de quantidades por pallet, o visualizador de PDF e os cadastros. A versão em PDF está disponível em [MANUAL_DE_USO_ALMOXARIFADO.pdf](ALMOXARIFADO_OFFLINE/MANUAL_DE_USO_ALMOXARIFADO.pdf).
 
 ## Arquivos gerados e dados locais
 

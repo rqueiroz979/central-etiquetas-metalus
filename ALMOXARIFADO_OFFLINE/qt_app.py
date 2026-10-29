@@ -56,7 +56,7 @@ from database import (
     upsert_material,
     upsert_supplier,
 )
-from pdf_label import generate_label_pdf
+from pdf_label import generate_label_pdf, generate_shelf_label_pdf, generate_shelf_labels_pdf
 
 
 APP_ROOT = Path(sys.executable).resolve().parent if getattr(sys, "frozen", False) else Path(__file__).resolve().parent
@@ -715,6 +715,87 @@ def import_lookup_file(db_path: Path, filename: str):
     return import_lookup_table(db_path, filename, Path(filename).read_bytes())
 
 
+SHELF_LOCATION_ALIASES = (
+    "localizacao",
+    "localização",
+    "codigo_local",
+    "código_local",
+    "codigo_prateleira",
+    "código_prateleira",
+    "endereco",
+    "endereço",
+    "location",
+)
+
+SHELF_DESCRIPTION_ALIASES = (
+    "descricao",
+    "descrição",
+    "descricao_prateleira",
+    "descrição_prateleira",
+    "descricao_material",
+    "descrição_material",
+    "description",
+    "prateleira",
+)
+
+
+def parse_shelf_labels_file(filename: str, file_bytes: bytes):
+    groups = spreadsheet_tables(filename, file_bytes)
+    if not groups:
+        raise ValueError("A planilha não contém uma tabela com cabeçalho e dados.")
+
+    labels = []
+    for table_name, headers, rows in groups:
+        field_map = {normalize_header(header): header for header in headers}
+        location_header = next(
+            (
+                field_map[normalize_header(alias)]
+                for alias in SHELF_LOCATION_ALIASES
+                if normalize_header(alias) in field_map
+            ),
+            None,
+        )
+        description_header = next(
+            (
+                field_map[normalize_header(alias)]
+                for alias in SHELF_DESCRIPTION_ALIASES
+                if normalize_header(alias) in field_map
+            ),
+            None,
+        )
+        if location_header is None or description_header is None:
+            continue
+
+        for row_number, row in enumerate(rows, start=2):
+            location = str(row.get(location_header, "") or "").strip()
+            description = str(row.get(description_header, "") or "").strip()
+            if not location and not description:
+                continue
+            if not location or not description:
+                sheet = f", aba '{table_name}'" if table_name else ""
+                raise ValueError(
+                    f"Linha {row_number}{sheet}: preencha Localização e Descrição."
+                )
+            labels.append({"location": location, "description": description})
+            if len(labels) > MAX_LABEL_COPIES:
+                raise ValueError(
+                    f"A planilha contém mais de {MAX_LABEL_COPIES} etiquetas. "
+                    "Divida os dados em arquivos menores."
+                )
+
+    if not labels:
+        raise ValueError(
+            "Não encontrei etiquetas na planilha. Use as colunas "
+            "'Localização' e 'Descrição'."
+        )
+    return labels
+
+
+def load_shelf_labels_file(filename: str):
+    path = Path(filename)
+    return parse_shelf_labels_file(path.name, path.read_bytes())
+
+
 def generate_pdf_task(db_path, output_dir, logo_path, payload, copies, layout_mode):
     pdf_path = generate_label_pdf(
         output_dir=output_dir,
@@ -1322,6 +1403,10 @@ class AlmoxarifadoWindow(QMainWindow):
         cad_layout.addWidget(self.counts_label)
         open_btn.hide()
         right.addWidget(cad)
+        shelf_btn = QPushButton("Etiqueta de prateleira")
+        shelf_btn.setCursor(Qt.PointingHandCursor)
+        shelf_btn.clicked.connect(self.open_shelf_label_dialog)
+        right.addWidget(shelf_btn)
         refresh_btn = QPushButton("Atualizar")
         refresh_btn.setToolTip("Limpar tela para gerar uma nova etiqueta")
         refresh_btn.clicked.connect(self.refresh_current_view)
@@ -1331,6 +1416,7 @@ class AlmoxarifadoWindow(QMainWindow):
 
     def build_home_page(self):
         page = self.scroll_page()
+        self.home_scroll = page
         content = page.widget()
         layout = content.layout()
         layout.setContentsMargins(20, 18, 20, 18)
@@ -2055,6 +2141,181 @@ class AlmoxarifadoWindow(QMainWindow):
         payload = self.pallet_payloads(payload, copies)
         return payload, copies, layout_mode
 
+    def open_shelf_label_dialog(self):
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Etiqueta de prateleira")
+        dialog.setMinimumWidth(max(320, min(480, self.width() - 60)))
+
+        layout = QVBoxLayout(dialog)
+        layout.setSpacing(12)
+        description = QLabel("Gere uma etiqueta avulsa no formato 100 × 70 mm.")
+        description.setWordWrap(True)
+        layout.addWidget(description)
+
+        form = QGridLayout()
+        form.setVerticalSpacing(10)
+        location_label = QLabel("Localização")
+        location_label.setProperty("class", "field")
+        location_entry = QLineEdit()
+        location_entry.setPlaceholderText("Ex.: A-03-02")
+        form.addWidget(location_label, 0, 0)
+        form.addWidget(location_entry, 1, 0)
+
+        description_label = QLabel("Descrição da prateleira/material")
+        description_label.setProperty("class", "field")
+        description_entry = QLineEdit()
+        description_entry.setPlaceholderText("Ex.: Ferragens")
+        form.addWidget(description_label, 2, 0)
+        form.addWidget(description_entry, 3, 0)
+
+        copies_label = QLabel("Quantidade de etiquetas")
+        copies_label.setProperty("class", "field")
+        copies_spin = QSpinBox()
+        copies_spin.setRange(1, MAX_LABEL_COPIES)
+        copies_spin.setValue(1)
+        form.addWidget(copies_label, 4, 0)
+        form.addWidget(copies_spin, 5, 0)
+        layout.addLayout(form)
+
+        buttons = QHBoxLayout()
+        buttons.addStretch()
+        cancel_btn = QPushButton("Cancelar")
+        cancel_btn.clicked.connect(dialog.reject)
+        generate_btn = QPushButton("Gerar etiqueta")
+        generate_btn.setProperty("class", "primary")
+        generate_btn.clicked.connect(
+            lambda: self.generate_shelf_label(
+                dialog,
+                location_entry,
+                description_entry,
+                copies_spin,
+            )
+        )
+        buttons.addWidget(cancel_btn)
+        buttons.addWidget(generate_btn)
+        layout.addLayout(buttons)
+        import_btn = QPushButton("Importar planilha e gerar lote")
+        import_btn.clicked.connect(
+            lambda: self.import_shelf_label_batch(
+                dialog,
+                import_btn,
+                generate_btn,
+            )
+        )
+        layout.addWidget(import_btn)
+        batch_status = QLabel("")
+        batch_status.setProperty("class", "muted")
+        batch_status.setWordWrap(True)
+        layout.addWidget(batch_status)
+        dialog.batch_status = batch_status
+        dialog.exec()
+
+    def import_shelf_label_batch(self, dialog, import_btn, manual_generate_btn):
+        filename, _ = QFileDialog.getOpenFileName(
+            dialog,
+            "Importar etiquetas de prateleira",
+            str(APP_DATA_DIR),
+            "Planilhas (*.csv *.ods *.xlsx *.xlsm);;CSV (*.csv);;LibreOffice Calc (*.ods);;Excel (*.xlsx *.xlsm)",
+        )
+        if not filename:
+            return
+
+        dialog.setEnabled(False)
+        import_btn.setEnabled(False)
+        manual_generate_btn.setEnabled(False)
+        dialog.batch_status.setText(f"Lendo {Path(filename).name}...")
+        worker = FunctionWorker(load_shelf_labels_file, filename)
+        worker.signals.finished.connect(
+            lambda labels: self.shelf_label_batch_loaded(
+                dialog,
+                import_btn,
+                manual_generate_btn,
+                labels,
+                Path(filename).name,
+            )
+        )
+        worker.signals.failed.connect(
+            lambda message: self.shelf_label_batch_failed(
+                dialog,
+                import_btn,
+                manual_generate_btn,
+                message,
+            )
+        )
+        self.thread_pool.start(worker)
+
+    def shelf_label_batch_loaded(self, dialog, import_btn, manual_generate_btn, labels, filename):
+        dialog.setEnabled(True)
+        prompt = (
+            f"Foram encontradas {len(labels)} etiquetas em {filename}.\n"
+            "Será gerado um PDF com uma etiqueta por página. Deseja continuar?"
+        )
+        answer = QMessageBox.question(
+            dialog,
+            "Confirmar lote",
+            prompt,
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.Yes,
+        )
+        if answer != QMessageBox.Yes:
+            import_btn.setEnabled(True)
+            manual_generate_btn.setEnabled(True)
+            dialog.batch_status.setText(f"{len(labels)} etiquetas encontradas em {filename}.")
+            return
+
+        import_btn.setEnabled(False)
+        manual_generate_btn.setEnabled(False)
+        dialog.setEnabled(False)
+        dialog.batch_status.setText(f"Gerando PDF com {len(labels)} etiquetas...")
+        worker = FunctionWorker(generate_shelf_labels_pdf, self.output_dir, labels)
+        worker.signals.finished.connect(lambda pdf_path: self.shelf_label_batch_done(dialog, pdf_path))
+        worker.signals.failed.connect(
+            lambda message: self.shelf_label_batch_failed(
+                dialog,
+                import_btn,
+                manual_generate_btn,
+                message,
+            )
+        )
+        self.thread_pool.start(worker)
+
+    def shelf_label_batch_done(self, dialog, pdf_path):
+        dialog.setEnabled(True)
+        dialog.accept()
+        self.show_pdf_preview(pdf_path)
+
+    def shelf_label_batch_failed(self, dialog, import_btn, manual_generate_btn, message):
+        dialog.setEnabled(True)
+        import_btn.setEnabled(True)
+        manual_generate_btn.setEnabled(True)
+        dialog.batch_status.setText("Não foi possível gerar o lote.")
+        QMessageBox.critical(dialog, "Lote de etiquetas", message)
+
+    def generate_shelf_label(self, dialog, location_entry, description_entry, copies_spin):
+        location = location_entry.text().strip()
+        description = description_entry.text().strip()
+        if not location or not description:
+            QMessageBox.warning(
+                dialog,
+                "Campos obrigatórios",
+                "Informe a localização e a descrição da prateleira.",
+            )
+            return
+
+        try:
+            pdf_path = generate_shelf_label_pdf(
+                self.output_dir,
+                location,
+                description,
+                copies_spin.value(),
+            )
+        except (OSError, ValueError) as exc:
+            QMessageBox.critical(dialog, "Erro ao gerar etiqueta", str(exc))
+            return
+
+        dialog.accept()
+        self.show_pdf_preview(pdf_path)
+
     def generate_pdf(self):
         try:
             payload, copies, layout_mode = self.build_payload()
@@ -2113,6 +2374,7 @@ class AlmoxarifadoWindow(QMainWindow):
         self.preview_zoom_label.setText("Ajustado")
         self.preview_card.show()
         self.preview_card.setFocus()
+        self.home_scroll.ensureWidgetVisible(self.preview_card)
 
     def zoom_preview(self, factor):
         if not self.last_pdf_path:

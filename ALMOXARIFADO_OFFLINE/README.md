@@ -20,7 +20,7 @@ Os pacotes são gerados pelos scripts na raiz do repositório:
 
 No GitHub Actions, o workflow de build gera o instalador `Almoxarifado-Setup.exe` e o pacote `.deb`, ambos disponíveis nos artefatos da execução. A pasta `dist\windows\ALMOXARIFADO` também pode ser distribuída como versão portátil. Veja o [guia principal](../README.md) e o [guia de instalação Linux](../INSTALACAO_LINUX.md).
 
-Para instruções de uso com imagens das telas, consulte o [manual ilustrado em Markdown](MANUAL_DE_USO.md) ou o [manual em PDF](MANUAL_DE_USO_ALMOXARIFADO.pdf).
+Para instruções de uso com imagens das telas, incluindo a criação avulsa e em lote de etiquetas de prateleira a partir de planilhas, consulte o [manual ilustrado em Markdown](MANUAL_DE_USO.md) ou o [manual em PDF](MANUAL_DE_USO_ALMOXARIFADO.pdf).
 
 ## Dados
 
