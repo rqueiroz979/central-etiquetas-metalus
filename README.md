@@ -6,6 +6,16 @@ O aplicativo final é o **ALMOXARIFADO desktop**, baseado na versão que já est
 
 A versão publicada para validação é a **v1.1.0**. Ela inclui etiquetas de prateleira avulsas e geração de lotes a partir de planilhas. O ciclo de testes de 45 dias começou em **29/10/2026**, com previsão de término em **13/12/2026**; novas melhorias podem ser planejadas depois de avaliar esse período.
 
+## Ponto de retomada do projeto
+
+**Atualizado em 29/10/2026.** Esta seção registra onde o trabalho parou e o que fazer quando a fase de testes terminar.
+
+- A versão de referência é a tag Git **`v1.1.0`**, publicada na branch `main`. O repositório é privado; a `main` está sincronizada com o GitHub. Última atualização da documentação: commit `776ec37`.
+- A v1.1.0 já inclui criação avulsa de etiquetas de prateleira e geração em lote por planilha (CSV, ODS, XLSX ou XLSM), limitada a 300 etiquetas por PDF. O lote usa as colunas **Localização** e **Descrição** e produz uma etiqueta 100 × 70 mm por página.
+- Os instaladores Windows e Zorin OS foram gerados pelo GitHub Actions e os testes de instalação/inicialização passaram. Os artefatos estão na [execução 9 do workflow](https://github.com/rqueiroz979/central-etiquetas-metalus/actions/runs/40944698586); expiram em **27/01/2027**.
+- **Agora:** usar a v1.1.0 durante o período de validação, previsto até **13/12/2026**. Anotar problemas ou sugestões observados no uso real; não iniciar novas melhorias até revisar esse retorno.
+- **Na retomada:** perguntar ao usuário como foram os testes e quais problemas ou melhorias são prioritários. Corrigir problemas confirmados, validar as mudanças e desenvolver a próxima rodada em uma branch separada baseada na `main`. Só publicar uma nova versão depois da aprovação e dos testes.
+
 O código-fonte principal dessa versão fica em `ALMOXARIFADO_OFFLINE/`:
 
 - `qt_app.py`: janela desktop, formulários, cadastros e visualização/impressão de PDF;
