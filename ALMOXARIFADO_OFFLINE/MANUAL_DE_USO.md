@@ -2,13 +2,15 @@
 
 Este manual explica como abrir o aplicativo desktop, preencher e gerar etiquetas, consultar cadastros, importar planilhas e guardar os arquivos gerados. O programa funciona em uma janela própria no Windows e no Zorin OS.
 
+As instruções correspondem à versão **v1.1.0**, incluindo a criação de etiquetas de prateleira avulsas e em lote.
+
 As imagens mostram a interface do aplicativo. Os dados preenchidos nelas são exemplos.
 
 ## 1. Abrir o aplicativo
 
 ### Windows instalado
 
-Abra **Almoxarifado** pelo menu Iniciar ou pelo atalho criado durante a instalação. O instalador já inclui os componentes necessários; não é preciso instalar Python.
+Baixe o artefato **Almoxarifado-Windows** na seção **Artifacts** da [execução de build v1.1.0](https://github.com/rqueiroz979/central-etiquetas-metalus/actions/runs/40944698586), extraia o ZIP e execute `Almoxarifado-Setup.exe`. Depois da instalação, abra **Almoxarifado** pelo menu Iniciar ou pelo atalho criado. O instalador já inclui os componentes necessários; não é preciso instalar Python.
 
 ### Windows portátil
 
@@ -16,7 +18,7 @@ Extraia a pasta portátil inteira e execute `INICIAR_ALMOXARIFADO.bat`. Não exe
 
 ### Zorin OS
 
-Instale o arquivo `.deb` com o APT e abra **Almoxarifado** pelo menu de aplicativos. Também é possível iniciar pelo terminal com:
+Baixe o artefato **Almoxarifado-Zorin-Linux** na seção **Artifacts** da [execução de build v1.1.0](https://github.com/rqueiroz979/central-etiquetas-metalus/actions/runs/40944698586), extraia o ZIP e instale o arquivo `.deb` com o APT. Abra **Almoxarifado** pelo menu de aplicativos. Também é possível iniciar pelo terminal com:
 
 ```bash
 almoxarifado

@@ -2,6 +2,10 @@
 
 O aplicativo final é o **ALMOXARIFADO desktop**, baseado na versão que já está em uso no Windows. Ele abre em uma janela própria, sem navegador, e reorganiza os painéis quando a janela fica menor. A mesma base Qt é empacotada para Windows e Zorin OS.
 
+## Versão atual e período de testes
+
+A versão publicada para validação é a **v1.1.0**. Ela inclui etiquetas de prateleira avulsas e geração de lotes a partir de planilhas. O ciclo de testes de 45 dias começou em **29/10/2026**, com previsão de término em **13/12/2026**; novas melhorias podem ser planejadas depois de avaliar esse período.
+
 O código-fonte principal dessa versão fica em `ALMOXARIFADO_OFFLINE/`:
 
 - `qt_app.py`: janela desktop, formulários, cadastros e visualização/impressão de PDF;
@@ -69,9 +73,9 @@ python ALMOXARIFADO_OFFLINE/qt_app.py
 
 ## Instaladores gerados pelo GitHub
 
-O workflow `.github/workflows/build-packages.yml` roda em push para `main` e também pode ser iniciado em **Actions → Build desktop packages → Run workflow**. Ele gera:
+O workflow `.github/workflows/build-packages.yml` roda em push para `main` e também pode ser iniciado em **Actions → Build desktop packages → Run workflow**. A execução que gerou os instaladores v1.1.0 está em [Build desktop packages — execução 9](https://github.com/rqueiroz979/central-etiquetas-metalus/actions/runs/40944698586). Ela gerou:
 
-- `Almoxarifado-Setup.exe` para Windows;
-- `almoxarifado-metalus_1.1.0_amd64.deb` para Zorin OS/Ubuntu amd64.
+- o artefato **Almoxarifado-Windows**, que contém `Almoxarifado-Setup.exe`;
+- o artefato **Almoxarifado-Zorin-Linux**, que contém `almoxarifado-metalus_1.1.0_amd64.deb`.
 
-Baixe os instaladores na seção **Artifacts** da execução do workflow. O job Linux instala o `.deb` com APT e testa a inicialização e o banco de dados tanto na conta principal quanto em uma segunda conta Linux, antes de publicar o artefato. A instalação do `.deb` instala automaticamente as bibliotecas nativas listadas como dependências; o usuário não precisa instalar Python nem pacotes manualmente.
+Abra a execução, role até **Artifacts** e baixe o ZIP da plataforma desejada. Extraia o ZIP antes de abrir o instalador do Windows ou instalar o `.deb` no Zorin. Os artefatos desta execução expiram em **27/01/2027**; depois dessa data, use uma execução mais recente. Os jobs instalaram e iniciaram os aplicativos de teste antes de publicar os arquivos.

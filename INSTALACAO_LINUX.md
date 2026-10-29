@@ -16,7 +16,9 @@ O primeiro build precisa de internet para baixar as dependências de empacotamen
 
 ## Instalar e abrir
 
-Se baixou o artefato **Almoxarifado-Zorin-Linux** pelo GitHub, primeiro extraia o ZIP. No Zorin, o gerenciador gráfico pode mostrar “tipo de arquivo não suportado” ao abrir diretamente um `.deb`; nesse caso, instale pelo terminal para que o APT reconheça o pacote local e resolva as dependências:
+Para a versão publicada **v1.1.0**, abra a [execução do build no GitHub](https://github.com/rqueiroz979/central-etiquetas-metalus/actions/runs/40944698586), role até **Artifacts** e baixe **Almoxarifado-Zorin-Linux**. Extraia o ZIP para obter `almoxarifado-metalus_1.1.0_amd64.deb`. O artefato desta execução fica disponível até **27/01/2027**; se já tiver expirado, escolha uma execução mais recente em **Actions → Build desktop packages**.
+
+No Zorin, o gerenciador gráfico pode mostrar “tipo de arquivo não suportado” ao abrir diretamente um `.deb`; nesse caso, instale pelo terminal para que o APT reconheça o pacote local e resolva as dependências:
 
 ```bash
 sudo apt install "/caminho/para/almoxarifado-metalus_1.1.0_amd64.deb"
@@ -55,6 +57,6 @@ O aplicativo e o atalho do menu são instalados para todos os usuários do compu
 - **Dependências nativas:** instale com `sudo apt install ./arquivo.deb` para que o APT resolva os pacotes necessários.
 - **Build:** gere o `.deb` no Linux; um pacote Windows não pode produzir o executável Linux e vice-versa.
 
-## Baixar pelo GitHub
+## Próximas versões pelo GitHub
 
-O workflow de build gera o instalador Linux em cada execução concluída. No GitHub, abra **Actions → Build desktop packages**, selecione uma execução e baixe o artefato **Almoxarifado-Zorin-Linux**. Antes de publicar o artefato, o workflow instala o `.deb` com o APT e testa a inicialização do aplicativo.
+O workflow gera um pacote Linux em cada execução concluída. Abra **Actions → Build desktop packages**, selecione a execução mais recente e baixe **Almoxarifado-Zorin-Linux** na seção **Artifacts**. Antes de publicar o artefato, o workflow instala o `.deb` com o APT e testa a inicialização e o banco do aplicativo em duas contas Linux.
