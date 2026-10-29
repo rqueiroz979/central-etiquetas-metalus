@@ -46,7 +46,7 @@ bash build_linux.sh
 O pacote será criado em `dist/linux/`. Instale-o pelo terminal com APT, que também resolve as dependências:
 
 ```bash
-sudo apt install ./dist/linux/almoxarifado-metalus_1.0.0_*.deb
+sudo apt install ./dist/linux/almoxarifado-metalus_1.1.0_*.deb
 ```
 
 Depois da instalação, abra **Almoxarifado** pelo menu de aplicativos. Python e internet não são necessários no computador de uso.
@@ -72,6 +72,6 @@ python ALMOXARIFADO_OFFLINE/qt_app.py
 O workflow `.github/workflows/build-packages.yml` roda em push para `main` e também pode ser iniciado em **Actions → Build desktop packages → Run workflow**. Ele gera:
 
 - `Almoxarifado-Setup.exe` para Windows;
-- `almoxarifado-metalus_1.0.0_amd64.deb` para Zorin OS/Ubuntu amd64.
+- `almoxarifado-metalus_1.1.0_amd64.deb` para Zorin OS/Ubuntu amd64.
 
 Baixe os instaladores na seção **Artifacts** da execução do workflow. O job Linux instala o `.deb` com APT e testa a inicialização e o banco de dados tanto na conta principal quanto em uma segunda conta Linux, antes de publicar o artefato. A instalação do `.deb` instala automaticamente as bibliotecas nativas listadas como dependências; o usuário não precisa instalar Python nem pacotes manualmente.

@@ -19,13 +19,13 @@ O primeiro build precisa de internet para baixar as dependências de empacotamen
 Se baixou o artefato **Almoxarifado-Zorin-Linux** pelo GitHub, primeiro extraia o ZIP. No Zorin, o gerenciador gráfico pode mostrar “tipo de arquivo não suportado” ao abrir diretamente um `.deb`; nesse caso, instale pelo terminal para que o APT reconheça o pacote local e resolva as dependências:
 
 ```bash
-sudo apt install "/caminho/para/almoxarifado-metalus_1.0.0_amd64.deb"
+sudo apt install "/caminho/para/almoxarifado-metalus_1.1.0_amd64.deb"
 ```
 
 Substitua o caminho de exemplo pelo caminho do arquivo extraído. Se o terminal estiver aberto na pasta do `.deb`, também pode usar:
 
 ```bash
-sudo apt install ./almoxarifado-metalus_1.0.0_amd64.deb
+sudo apt install ./almoxarifado-metalus_1.1.0_amd64.deb
 ```
 
 Abra **Almoxarifado** pelo menu de aplicativos. O pacote declara as bibliotecas nativas usadas pelo Qt e pelo PDF; o APT instala automaticamente as que ainda faltam durante a instalação. O computador precisa de internet nessa etapa se precisar baixar dependências. Python e pasta-fonte não são necessários.

@@ -61,7 +61,7 @@ Categories=Office;
 EOF
 install -Dm644 /dev/stdin "$PACKAGE_ROOT/DEBIAN/control" <<EOF
 Package: almoxarifado-metalus
-Version: 1.0.0
+Version: 1.1.0
 Section: office
 Priority: optional
 Architecture: $PACKAGE_ARCH
@@ -71,6 +71,6 @@ Description: Aplicativo desktop para gerar etiquetas de almoxarifado
 EOF
 
 mkdir -p "$APP_DIR/dist/linux"
-OUTPUT_DEB="$APP_DIR/dist/linux/almoxarifado-metalus_1.0.0_${PACKAGE_ARCH}.deb"
+OUTPUT_DEB="$APP_DIR/dist/linux/almoxarifado-metalus_1.1.0_${PACKAGE_ARCH}.deb"
 dpkg-deb --build --root-owner-group "$PACKAGE_ROOT" "$OUTPUT_DEB"
 echo "Package created at $OUTPUT_DEB"
