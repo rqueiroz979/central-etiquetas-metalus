@@ -49,6 +49,20 @@ Na parte superior, informe os dados da etiqueta:
 
 O campo **Código do Produto** é obrigatório. Os demais dados devem ser preenchidos conforme a etiqueta e o processo da empresa. Pressionar **Enter** em um campo avança para o próximo.
 
+### Criar etiqueta de prateleira
+
+Na tela inicial, clique em **Etiqueta de prateleira**. Informe a **Localização** (por exemplo, `A-03-02`), a **Descrição da prateleira/material** e a quantidade de cópias. Cada cópia ocupa uma página no formato **100 × 70 mm**. Clique em **Gerar etiqueta** para abrir a pré-visualização, onde é possível imprimir ou salvar o PDF.
+
+Para criar várias etiquetas, clique em **Importar planilha e gerar lote** e escolha um arquivo CSV, ODS, XLSX ou XLSM. A planilha precisa ter as colunas **Localização** e **Descrição**, com uma prateleira por linha. Exemplo:
+
+```csv
+Localização,Descrição
+A-03-02,Ferragens
+B-01-04,Parafusos
+```
+
+Linhas completamente vazias são ignoradas; se uma linha tiver apenas localização ou descrição, a importação avisa qual linha precisa ser corrigida. O lote aceita até 300 etiquetas; cada linha gera uma página 100 × 70 mm no mesmo PDF. Confira a quantidade encontrada e confirme antes de gerar.
+
 ## 4. Pesquisar materiais e fornecedores
 
 1. Clique em **Selecionar** ao lado do código do produto ou do fornecedor.

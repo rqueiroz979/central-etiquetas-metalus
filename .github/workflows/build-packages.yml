@@ -84,7 +84,7 @@ jobs:
 
       - name: Install package dependencies and smoke-test the desktop app
         run: |
-          sudo apt-get install -y ./dist/linux/almoxarifado-metalus_1.0.0_*.deb
+          sudo apt-get install -y ./dist/linux/almoxarifado-metalus_1.1.0_*.deb
           set +e
           XDG_DATA_HOME="$RUNNER_TEMP/almoxarifado-test-data" QT_QPA_PLATFORM=offscreen timeout -k 5s 15s almoxarifado
           status=$?

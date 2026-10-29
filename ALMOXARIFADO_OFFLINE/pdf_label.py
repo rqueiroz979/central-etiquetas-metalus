@@ -710,6 +710,95 @@ def _draw_multiline_text(
         c.drawString(x + padding_x, current_y, line)
 
 
+def generate_shelf_labels_pdf(output_dir: Path, labels: list[dict]):
+    if not labels:
+        raise ValueError("Não há etiquetas de prateleira para gerar.")
+    if len(labels) > 300:
+        raise ValueError("O limite é de 300 etiquetas por lote.")
+
+    validated_labels = []
+    for index, label in enumerate(labels, start=1):
+        location = _safe(label.get("location"))
+        description = _safe(label.get("description"))
+        if not location or not description:
+            raise ValueError(f"A etiqueta {index} precisa de localização e descrição.")
+        validated_labels.append({"location": location, "description": description})
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+    out_pdf = output_dir / f"prateleiras_{timestamp}.pdf"
+    page_w = 100 * mm
+    page_h = 70 * mm
+    c = canvas.Canvas(str(out_pdf), pagesize=(page_w, page_h))
+    c.setTitle(f"Etiquetas de prateleira ({len(validated_labels)})")
+
+    margin = 4 * mm
+    for index, label in enumerate(validated_labels):
+        _cell(
+            c,
+            margin,
+            margin,
+            page_w - 2 * margin,
+            page_h - 2 * margin,
+            stroke=colors.HexColor("#1C1C1C"),
+            stroke_width=1.2,
+        )
+        draw_text_box(
+            c,
+            "LOCALIZAÇÃO",
+            margin + 4 * mm,
+            52 * mm,
+            page_w - 2 * (margin + 4 * mm),
+            8 * mm,
+            max_font_size=11,
+            min_font_size=8,
+            max_lines=1,
+        )
+        draw_text_box(
+            c,
+            label["location"],
+            margin + 4 * mm,
+            30 * mm,
+            page_w - 2 * (margin + 4 * mm),
+            21 * mm,
+            max_font_size=34,
+            min_font_size=10,
+            max_lines=1,
+        )
+        c.setStrokeColor(colors.HexColor("#CBD5E1"))
+        c.setLineWidth(0.7)
+        c.line(margin + 4 * mm, 28 * mm, page_w - margin - 4 * mm, 28 * mm)
+        draw_text_box(
+            c,
+            label["description"],
+            margin + 4 * mm,
+            margin + 2 * mm,
+            page_w - 2 * (margin + 4 * mm),
+            19 * mm,
+            max_font_size=17,
+            min_font_size=7,
+            max_lines=3,
+        )
+        if index < len(validated_labels) - 1:
+            c.showPage()
+    c.save()
+    return out_pdf
+
+
+def generate_shelf_label_pdf(
+    output_dir: Path,
+    location: str,
+    description: str,
+    copies: int = 1,
+):
+    if not isinstance(copies, int) or not 1 <= copies <= 300:
+        raise ValueError("A quantidade de etiquetas deve estar entre 1 e 300.")
+    return generate_shelf_labels_pdf(
+        output_dir,
+        [{"location": location, "description": description}] * copies,
+    )
+
+
 def draw_identificacao_label(c, payload, logo_path: Path, box_x, box_y, box_w, box_h):
     border = colors.HexColor("#111111")
     x0 = box_x

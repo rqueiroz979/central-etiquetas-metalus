@@ -9,7 +9,7 @@ O código-fonte principal dessa versão fica em `ALMOXARIFADO_OFFLINE/`:
 - `pdf_label.py`: geração dos PDFs;
 - `static/`: ícones e logotipo.
 
-O [manual de uso ilustrado](ALMOXARIFADO_OFFLINE/MANUAL_DE_USO.md) explica a geração de etiquetas, a divisão de quantidades por pallet, o visualizador de PDF e os cadastros. A versão em PDF está disponível em [MANUAL_DE_USO_ALMOXARIFADO.pdf](ALMOXARIFADO_OFFLINE/MANUAL_DE_USO_ALMOXARIFADO.pdf).
+O [manual de uso ilustrado](ALMOXARIFADO_OFFLINE/MANUAL_DE_USO.md) explica a geração de etiquetas de produção, a criação avulsa e em lote de etiquetas de prateleira a partir de planilhas, a divisão de quantidades por pallet, o visualizador de PDF e os cadastros. A versão em PDF está disponível em [MANUAL_DE_USO_ALMOXARIFADO.pdf](ALMOXARIFADO_OFFLINE/MANUAL_DE_USO_ALMOXARIFADO.pdf).
 
 ## Arquivos gerados e dados locais
 
@@ -46,7 +46,7 @@ bash build_linux.sh
 O pacote será criado em `dist/linux/`. Instale-o pelo terminal com APT, que também resolve as dependências:
 
 ```bash
-sudo apt install ./dist/linux/almoxarifado-metalus_1.0.0_*.deb
+sudo apt install ./dist/linux/almoxarifado-metalus_1.1.0_*.deb
 ```
 
 Depois da instalação, abra **Almoxarifado** pelo menu de aplicativos. Python e internet não são necessários no computador de uso.
@@ -72,6 +72,6 @@ python ALMOXARIFADO_OFFLINE/qt_app.py
 O workflow `.github/workflows/build-packages.yml` roda em push para `main` e também pode ser iniciado em **Actions → Build desktop packages → Run workflow**. Ele gera:
 
 - `Almoxarifado-Setup.exe` para Windows;
-- `almoxarifado-metalus_1.0.0_amd64.deb` para Zorin OS/Ubuntu amd64.
+- `almoxarifado-metalus_1.1.0_amd64.deb` para Zorin OS/Ubuntu amd64.
 
 Baixe os instaladores na seção **Artifacts** da execução do workflow. O job Linux instala o `.deb` com APT e testa a inicialização e o banco de dados tanto na conta principal quanto em uma segunda conta Linux, antes de publicar o artefato. A instalação do `.deb` instala automaticamente as bibliotecas nativas listadas como dependências; o usuário não precisa instalar Python nem pacotes manualmente.
